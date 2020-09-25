@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html class="h100b overflow_login" xmlns:th="http://www.thymeleaf.org">
+
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-store, must-revalidate"/>
+<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT"/>
+<META HTTP-EQUIV="expires" CONTENT="0"/>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>东阳光招投标网站</title>
+    <link rel="stylesheet" href="../../../static/css/all-min.css" th:href="@{../css/all-min.css}">
+    <link rel="stylesheet" type="text/css" href="../../../static/css/login.css" th:href="@{../css/login.css}"/>
+</head>
+<body onload="calSelecterHeight()" class="h100b" style="margin:0;padding:0;overflow:hidden;">
+    <div id="login_content">
+        <div id="login_wrap">
+            <div id="login_bg" class="slideBox">
+                <ul id="scroll_ul" class="slideImgs">
+                    <li class="active">
+                        <img src="../../../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload.jpg}">
+                    </li>
+                </ul>
+            </div>
+
+            <form method="post" action="http://joa.dyg.com.cn:9080/seeyon/main.do?method=login" id="login_form"
+                  name="loginform" onsubmit="checkPwdStrength();">
+                <div id="login_area_div" class="login_area_t_b"
+                     style="background: rgba(255, 255, 255, 0.4); left: 0px; top: inherit; bottom: 0%;">
+                    <div class="login_area_body">
+
+                        <div class="login_box">
+                            <div class="pic">
+                                <div class="pic_box"><img src="../../../static/imgs/pic.gif" th:src="@{../imgs/pic.gif}"/>
+                                </div>
+                                <div class="pic_box_bg"></div>
+                            </div>
+                            <div class="login_top" style="padding-top: 45px">
+                                <!-- 用户名 -->
+                                <div class="username">
+                                    <em class="login_username_em"></em><input id="login_username" name="login_username"
+                                                                              type="text" style="border:0;"/>
+                                </div>
+                                <!-- 密码 -->
+                                <div class="password">
+                                    <em clas="login_password_em"></em><input id="login_password" name="login_password"
+                                                                             type="password"/>
+                                </div>
+                                <input type="hidden" id="login_validatePwdStrength" name="login_validatePwdStrength"
+                                       value="4">
+
+                                <!-- 登陆按钮 -->
+                                <div class="login_btn">
+                                    <input type="button" id="login_button" class="point" value="登 录"
+                                           onClick="loginButtonOnClickHandler();"/>
+                                    <input id="submit_button" type="submit" style="display: none" value=""/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="login_bottom_div" class="login_bottom">
+                            <div class="fzIntall_area">
+                            <span class="zhixin" title="找回密码？"><a onclick="retrievePassword();"><font
+                                    color="white">找回密码？</font></a></span>
+                            </div>
+
+                        </div>
+                        <!-- 密码错误显示 -->
+                        <div id="login_error" class="login_error" style="display:none"></div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+        <div id="login_logo" style="top: 6%; left: 3%;">
+            <img src="../../../static/imgs/fileUpload2.jpg" th:src="@{../imgs/fileUpload2.jpg}">
+        </div>
+    </div>
+</body>
+</html>
