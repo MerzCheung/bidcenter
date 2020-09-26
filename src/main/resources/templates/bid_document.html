@@ -55,6 +55,45 @@
         font-size: 28px;
     }
 </style>
+<style>
+    .center-header {
+        margin: 10px;
+        line-height: 30px;
+        height: 30px;
+    }
+    .center-header-title{
+        text-align: left;
+        color: #3291F8;
+        font-size: 20px;
+    }
+    .center-header-title-icon{
+        font-weight: 900
+    }
+    .center-header-title-text{
+
+    }
+    .center-header-desc{
+        text-align: left;
+        color: #000000;
+        font-size: 20px;
+    }
+    .center-header-number{
+        text-align: left;
+        color: #000000;
+        font-size: 20px;
+    }
+    .center-right{
+        border: 1px solid rgba(187, 187, 187, 100);
+        margin: 10px;
+        height: 200px;
+        font-size: 28px;
+        text-align: center;
+        color: #000000;
+    }
+    .center-right>div {
+        margin: 34px 60px;
+    }
+</style>
 <body>
 <div id="app">
     <template>
@@ -64,16 +103,52 @@
                 <Layout>
                     <Sider hide-trigger :style="{background: '#fff'}" th:include="sider"></Sider>
                     <Layout :style="{padding: '0 24px 24px'}">
-                        <Breadcrumb :style="{margin: '24px 0'}">
-                            <BreadcrumbItem>Home</BreadcrumbItem>
-                            <BreadcrumbItem>Components</BreadcrumbItem>
-                            <BreadcrumbItem>Layout</BreadcrumbItem>
-                        </Breadcrumb>
                         <Content :style="{padding: '24px', minHeight: '1200px', background: '#fff'}">
-
-                            <template>
-                                <i-Table border :columns="columns2" :data="data2"></i-Table>
-                            </template>
+                            <Row>
+                                <i-col span="8">
+                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayward" @on-search="query"/>
+                                </i-col>
+                            </Row>
+                            <Row style="padding: 10px 0">
+                                <template>
+                                    <List item-layout="vertical">
+                                        <template v-for="item in data" :key="item.title">
+                                            <row style="border: 1px solid rgba(187, 187, 187, 100);margin-bottom: 10px;">
+                                                <i-Col span="18">
+                                                    <div>
+                                                        <Row class="center-header">
+                                                            <i-Col span="2" class="center-header-title">
+                                                                <span class="center-header-title-icon">|</span>
+                                                                <span class="center-header-title-text">项目</span>
+                                                            </i-Col>
+                                                            <i-Col span="18" class="center-header-desc">
+                                                                东阳光集团宜都工业园区智慧管理中心设计方案
+                                                            </i-Col>
+                                                            <i-Col span="4" class="center-header-number">
+                                                                编号：9527
+                                                            </i-Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style="padding: 10px">
+                                                        <i-Table border :loading="loading" ref="selection" :columns="columns1" :data="data1">
+                                                            <template slot-scope="{ row, index }" slot="action">
+                                                                <i-button type="primary" size="small" @click="modal2 = true">编辑</i-button>
+                                                            </template>
+                                                        </i-Table>
+                                                    </div>
+                                                </i-Col>
+                                                <i-Col span="6">
+                                                    <div class="center-right">
+                                                        <div>距离投标结束</div>
+                                                        <div>1天12时23分02秒</div>
+                                                    </div>
+                                                </i-Col>
+                                            </row>
+                                        </template>
+                                        <Page :total="page_total" style="float: right;" show-total show-sizer show-elevator @on-change="page_change" @on-page-size-change="page_size"/>
+                                    </List>
+                                </template>
+                            </Row>
                         </Content>
                     </Layout>
                 </Layout>
@@ -91,9 +166,35 @@
         data() {
             return {
                 activeName: '1-2',
-                template_1: true,
-                template_2: false,
+                kayward: '',
+                loading: false,
+                page_total: 100,
+                data: [
+                    {
+                        title: 'This is title 1',
+                        description: 'This is description, this is description, this is description22.',
+                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
+                        content: 'This is the content, this is the content, this is the content, this is the content111.'
+                    },
+                    {
+                        title: 'This is title 2',
+                        description: 'This is description, this is description, this is description22.',
+                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
+                        content: 'This is the content, this is the content, this is the content, this is the content111.'
+                    },
+                    {
+                        title: 'This is title 3',
+                        description: 'This is description, this is description, this is description22.',
+                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
+                        content: 'This is the content, this is the content, this is the content, this is the content111.'
+                    }
+                ],
                 columns1: [
+                    {
+                        type: 'selection',
+                        width: 60,
+                        align: 'center'
+                    },
                     {
                         title: 'Name',
                         key: 'name'
@@ -105,6 +206,12 @@
                     {
                         title: 'Address',
                         key: 'address'
+                    },
+                    {
+                        title: 'Action',
+                        slot: 'action',
+                        width: 150,
+                        align: 'center'
                     }
                 ],
                 data1: [
@@ -132,66 +239,29 @@
                         address: 'Ottawa No. 2 Lake Park',
                         date: '2016-10-04'
                     }
-                ],
-
-
-                columns2: [
-                    {
-                        title: 'Name2',
-                        key: 'name'
-                    },
-                    {
-                        title: 'Age2',
-                        key: 'age'
-                    },
-                    {
-                        title: 'Address2',
-                        key: 'address'
-                    }
-                ],
-                data2: [
-                    {
-                        name: 'John Brow2n',
-                        age: 18,
-                        address: 'New York No. 1 Lake Park',
-                        date: '2016-10-03'
-                    },
-                    {
-                        name: 'Jim Green2',
-                        age: 24,
-                        address: 'London No. 1 Lake Park',
-                        date: '2016-10-01'
-                    },
-                    {
-                        name: 'Joe Black2',
-                        age: 30,
-                        address: 'Sydney No. 1 Lake Park',
-                        date: '2016-10-02'
-                    },
-                    {
-                        name: 'Jon Snow',
-                        age: 26,
-                        address: 'Ottawa No. 2 Lake Park',
-                        date: '2016-10-04'
-                    }
                 ]
             }
         },
         methods: {
-            menu_switch(name) {
-                this.template_1=false;
-                this.template_2=false;
-                if ('1-1' == name) {
-                    this.template_1=true
-                } else if ('1-2' == name) {
-                    this.template_2=true
-                }
-            },
             page_change (page) {
                 console.log(page)
             },
             menu_select(name) {
                 menuSelect.menu_select(name)
+            },
+            page_change (page) {
+                console.log(page)
+            },
+            page_size (size) {
+                console.log(size)
+            },
+            query() {
+                console.log(this.kayward)
+                // axios.get('/json')
+                //     .then(response => (console.log("111   " + response)))
+                //     .catch(function (error) { // 请求失败处理
+                //         console.log(error);
+                //     });
             }
         }
     })
