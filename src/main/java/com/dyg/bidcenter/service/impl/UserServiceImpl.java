@@ -35,10 +35,6 @@ public class UserServiceImpl implements UserService {
         }
         sysUserEntity.setAccount(account);
         sysUserEntity.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
-        sysUserEntity.setNickName(account);
-        sysUserEntity.setBalance(1000);
-        sysUserEntity.setPortraitUri("");
-        sysUserEntity.setSecretKey(RandomUtil.getUUID());
         userMapper.insertUser(sysUserEntity);
         return ResponseUtil.result(ResultCode.SUCCESS, sysUserEntity);
     }

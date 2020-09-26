@@ -3,7 +3,7 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/cms?allowMultiQueries=true&useUnicode=true&tinyInt1isBit=false&characterEncoding=UTF-8&autoReconnect=true&useSSL=true&serverTimezone=Hongkong
+    url: jdbc:mysql://localhost:3306/bidcenter?allowMultiQueries=true&useUnicode=true&tinyInt1isBit=false&characterEncoding=UTF-8&autoReconnect=true&useSSL=true&serverTimezone=Hongkong
     username: root
     password: asd
     type: com.alibaba.druid.pool.DruidDataSource

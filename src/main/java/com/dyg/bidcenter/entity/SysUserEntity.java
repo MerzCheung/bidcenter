@@ -12,12 +12,7 @@ import java.util.List;
 public class SysUserEntity {
     private Integer id;
     private String account;
-    private String phoneNum;
     private String password;
-    private String secretKey;
-    private String nickName;
-    private String portraitUri;
-    private Integer balance;
 
     private List<SysRolesEntity> rolesEntityList;
     private List<SysPermissionsEntity> permissionsEntities;

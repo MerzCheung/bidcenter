@@ -5,12 +5,7 @@
     <resultMap id="getUserMap" type="com.dyg.bidcenter.entity.SysUserEntity">
         <id column="uId" property="id"/>
         <result column="account" property="account"/>
-        <result column="phone_num" property="phoneNum"/>
         <result column="password" property="password"/>
-        <result column="secret_key" property="secretKey"/>
-        <result column="nick_name" property="nickName"/>
-        <result column="portrait_uri" property="portraitUri"/>
-        <result column="balance" property="balance"/>
         <collection property="rolesEntityList" ofType="com.dyg.bidcenter.entity.SysRolesEntity">
             <id column="rId" property="id"/>
             <result column="role" property="role"/>
@@ -24,11 +19,7 @@
     </resultMap>
     <insert id="insertUser" parameterType="com.dyg.bidcenter.entity.SysUserEntity">
         insert into sys_user(account,
-        password,
-        secret_key,
-        nick_name,
-        portrait_uri,
-        balance,created_time)
+        password,created_time)
         values (#{account}, #{password}, #{secretKey}, #{nickName}, #{portraitUri}, #{balance}, NOW())
     </insert>
 
@@ -47,10 +38,7 @@
     <update id="updateUser" parameterType="com.dyg.bidcenter.entity.SysUserEntity">
         update sys_user
         <set>
-            <if test="phoneNum != null and phoneNum != ''">phone_num=#{phoneNum},</if>
             <if test="password != null and password != ''">password=#{password},</if>
-            <if test="nickName != null and nickName != ''">nick_name=#{nickName},</if>
-            <if test="portraitUri != null and portraitUri != ''">portrait_uri=#{portraitUri},</if>
         </set>
         where id=#{id} and is_valid=1
     </update>
@@ -59,12 +47,7 @@
         select
         us.id uId,
         us.account,
-        us.phone_num,
         us.password,
-        us.secret_key,
-        us.nick_name,
-        us.portrait_uri,
-        us.balance,
         ro.id rId,
         ro.role,
         ro.description rDescription,
@@ -83,12 +66,7 @@
         select
         id,
         account,
-        phone_num phoneNum,
-        password,
-        secret_key secretKey,
-        nick_name nickName,
-        portrait_uri portraitUri,
-        balance
+        password
         from sys_user
         where id=#{userId} and is_valid=1
     </select>
