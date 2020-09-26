@@ -1,0 +1,23 @@
+<template>
+    <i-Header>
+        <i-Menu mode="horizontal" theme="dark" active-name="1">
+            <div class="layout-logo">
+                <img src="../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload2.jpg}">
+                <span class="logo-title">东阳光询报价系统</span>
+            </div>
+            <div class="layout-nav">
+                <template>
+                    <Dropdown>
+                        <a href="javascript:void(0)">
+                            夏雨
+                            <Icon type="ios-arrow-down"></Icon>
+                        </a>
+                        <i-DropdownMenu slot="list">
+                            <Dropdown-item>退出</Dropdown-item>
+                        </i-DropdownMenu>
+                    </Dropdown>
+                </template>
+            </div>
+        </i-Menu>
+    </i-Header>
+</template>

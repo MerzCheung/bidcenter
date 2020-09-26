@@ -60,50 +60,22 @@
     <template>
         <div class="layout">
             <Layout>
-                <i-Header>
-                    <i-Menu mode="horizontal" theme="dark" active-name="1">
-                        <div class="layout-logo">
-                            <img src="../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload2.jpg}">
-                            <span class="logo-title">东阳光询报价系统</span>
-                        </div>
-                        <div class="layout-nav">
-                            <template>
-                                <Dropdown>
-                                    <a href="javascript:void(0)">
-                                        夏雨
-                                        <Icon type="ios-arrow-down"></Icon>
-                                    </a>
-                                    <i-DropdownMenu slot="list">
-                                        <Dropdown-item>退出</Dropdown-item>
-                                    </i-DropdownMenu>
-                                </Dropdown>
-                            </template>
-                        </div>
-                    </i-Menu>
-                </i-Header>
+                <Layout th:include="hender"></Layout>
                 <Layout>
-                    <Sider hide-trigger :style="{background: '#fff'}">
-                        <i-Menu active-name="1-1" theme="light" width="auto">
-                            <Menu-item name="1-1" @click.native="menu_switch('1-1')">
-                                <Icon type="ios-navigate"></Icon>
-                                投标编辑
-                            </Menu-item>
-                            <Menu-item name="1-2" @click.native="menu_switch('1-2')">
-                                <Icon type="ios-keypad"></Icon>
-                                标书管理
-                            </Menu-item>
-                            <Menu-item name="1-3" @click.native="menu_switch('1-3')">
-                                <Icon type="ios-analytics"></Icon>
-                                供应商信息管理
-                            </Menu-item>
-                            <Menu-item name="1-4" @click.native="menu_switch('1-4')">
-                                <Icon type="ios-man"></Icon>
-                                采购员/审计员信息
-                            </Menu-item>
-                        </i-Menu>
-                    </Sider>
-                    <Layout :style="{padding: '0 24px 24px'}" th:include="bid" v-if="template_1"></Layout>
-                    <Layout :style="{padding: '0 24px 24px'}" th:include="bid_document" v-if="template_2"></Layout>
+                    <Sider hide-trigger :style="{background: '#fff'}" th:include="sider"></Sider>
+                    <Layout :style="{padding: '0 24px 24px'}">
+                        <Breadcrumb :style="{margin: '24px 0'}">
+                            <BreadcrumbItem>Home</BreadcrumbItem>
+                            <BreadcrumbItem>Components</BreadcrumbItem>
+                            <BreadcrumbItem>Layout</BreadcrumbItem>
+                        </Breadcrumb>
+                        <Content :style="{padding: '24px', minHeight: '1200px', background: '#fff'}">
+
+                            <template>
+                                <i-Table border :columns="columns2" :data="data2"></i-Table>
+                            </template>
+                        </Content>
+                    </Layout>
                 </Layout>
             </Layout>
         </div>
@@ -111,11 +83,14 @@
 </div>
 </body>
 
-<script type="text/javascript">
+<script src="../static/js/axios.min.js" th:src="@{../js/axios.min.js}"></script>
+<script type="module">
+    import menuSelect from '../js/menu_select.js';
     var app = new Vue({
         el: '#app',
         data() {
             return {
+                activeName: '1-2',
                 template_1: true,
                 template_2: false,
                 columns1: [
@@ -214,8 +189,12 @@
             },
             page_change (page) {
                 console.log(page)
+            },
+            menu_select(name) {
+                menuSelect.menu_select(name)
             }
         }
     })
 </script>
 </html>
+
