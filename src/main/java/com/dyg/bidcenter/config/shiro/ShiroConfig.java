@@ -54,7 +54,6 @@ public class ShiroConfig {
         filterRuleMap.put("/font/**", "anon");
         filterRuleMap.put("/imgs/**", "anon");
         filterRuleMap.put("/lib/**", "anon");
-        filterRuleMap.put("/user/login", "anon");
         // 访问401和404页面不通过我们的Filter
 //        filterRuleMap.put("/401", "anon");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);

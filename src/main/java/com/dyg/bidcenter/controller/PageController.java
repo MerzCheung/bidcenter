@@ -13,6 +13,6 @@ public class PageController {
 
     @GetMapping("/")
     public String loginView() {
-        return "pages/user/login";
+        return "login";
     }
 }
