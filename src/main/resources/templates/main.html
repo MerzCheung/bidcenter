@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="h100b overflow_login" xmlns:th="http://www.thymeleaf.org">
+
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-store, must-revalidate"/>
+<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT"/>
+<META HTTP-EQUIV="expires" CONTENT="0"/>
+
+<head th:include="console/header">
+</head>
+
+<body>
+
+<script type="text/javascript" th:inline="javascript">
+    var dealMeasureEnum = [[${dealMeasureEnum}]];
+</script>
+
+<style type="text/css">
+    th.demo-table-info-column {
+        text-align: center !important;
+    }
+
+    td.demo-table-info-column {
+        text-align: center !important;
+    }
+
+    span.item {
+        margin-left: 10px;
+    }
+</style>
+<!-- import Vue.js -->
+<script src="https://cdn.bootcss.com/vue/2.5.16/vue.min.js" th:src="@{https://cdn.bootcss.com/vue/2.5.16/vue.min.js}"></script>
+<!-- import stylesheet -->
+<link href="https://cdn.bootcss.com/iview/2.14.0/styles/iview.css" th:src="@{https://cdn.bootcss.com/iview/2.14.0/styles/iview.css}" rel="stylesheet">
+<!-- import iView -->
+<script src="https://cdn.bootcss.com/iview/2.14.0/iview.min.js" th:src="@{https://cdn.bootcss.com/iview/2.14.0/iview.min.js}"></script>
+<!--<div th:include="console/footer"></div>-->
+
+
+<div id="app">
+
+    <div>
+        <blockquote class="layui-elem-quote">
+            <h1>商家违规管理</h1>
+            <!--<small> 销售报表</small>-->
+        </blockquote>
+        <hr/>
+    </div>
+
+    <div style="margin-bottom: 20px">
+        <i-input v-model="phone" placeholder="请输入手机号" style="width: 200px;"></i-input>
+
+        <label style="margin-left: 50px;">处罚分类:</label>
+        <i-select v-model="dealMeasure" style="width:200px">
+            <i-option value="">全部</i-option>
+            <i-option th:each="e,eStat:${dealMeasureEnum}"
+                      th:value="${e.code}" th:text="${e.desc}"></i-option>
+        </i-select>
+
+        <date-picker type="datetime" format="yyyy-MM-dd HH:mm:ss"
+                     style="width: 200px;margin-left: 50px" placeholder="申请开始时间"
+                     @on-change="dealTimeStartDataChange"/>
+        <date-picker type="datetime" format="yyyy-MM-dd HH:mm:ss"
+                     style="width: 200px;margin-left: 50px" placeholder="申请结束时间"
+                     @on-change="dealTimeEndDataChange"/>
+        <i-button style="margin-left: 50px" type="primary" @click="getDataList">搜索</i-button>
+    </div>
+
+    <hr style="height: 2px;margin-bottom: 10px">
+
+    <i-button @click="add">添加</i-button>
+    <i-table :data="tableData" :columns="tableColumns" border stripe></i-table>
+    <div style="margin: 10px;overflow: hidden">
+        <div style="float: right;">
+            <page :total="totalElements" :page-size="size" show-sizer @on-page-size-change="changePageSizeFun"
+                  @on-change="changePagesFun"></page>
+        </div>
+    </div>
+
+    <modal v-model="myModal" title="添加/修改违规信息" @on-ok="ok" :loading="loading" width="600px">
+        <i-form :model="addFormData" :label-width="80">
+
+            <form-item label="商家手机号:">
+                <i-input v-model="addFormData.phone" placeholder="请输入手机号" style="width: 200px;"></i-input>
+                <i-button @click="see" style="margin-left: 10px">查询</i-button>
+            </form-item>
+
+            <hr style="height: 1px;margin-top: -8px;margin-bottom: 10px">
+
+            <div>
+                <div style="margin-left: 8px;margin-bottom: 10px">
+                    <span class="item">该商家当前扣分:{{addFormData.deductPointAlready}},</span>
+                    <span class="item">账户余额:{{addFormData.accountBalance}},</span>
+                    <span class="item">冻结金额:{{addFormData.freezeMoney}}</span>
+                </div>
+                <form-item label="处罚分类:">
+                    <i-select v-model="addFormData.dealMeasure" style="width:200px">
+                        <i-option v-for="item in dealMeasureEnum" :value="item.code" :key="item.code">
+                            {{ item.desc }}
+                        </i-option>
+                    </i-select>
+                </form-item>
+                <form-item label="扣分:">
+                    <input-number v-model="addFormData.deductPoint" precision="0"></input-number>
+                    <date-picker type="date" format="yyyy-MM-dd" v-model="addFormData.deadLineTimeStamp"
+                                 style="width: 200px;margin-left: 10px" placeholder="扣分有效期"
+                                 @on-change="(data)=>addFormData.deadLineTime=data"/>
+                    <span>默认一个月</span>
+                </form-item>
+                <form-item label="扣款:">
+                    <input-number v-model="addFormData.deductFee" step="0.01"
+                                  :formatter="value=>decimal(value)"></input-number>
+                    元
+                </form-item>
+
+                <form-item label="违规说明:">
+                    <i-input v-model="addFormData.reason" type="textarea" :autosize="{minRows: 2,maxRows: 5}"
+                             placeholder="请输入处罚原因"></i-input>
+                </form-item>
+            </div>
+
+        </i-form>
+
+    </modal>
+
+
+</div>
+
+
+</body>
+
+
+<script type="text/javascript">
+    /*<![CDATA[*/
+
+    var app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                page: 0,
+                size: 10,
+                totalElements: 0,
+                dealMeasureEnum: dealMeasureEnum,
+                loading: false,
+                addFormData: {
+                    deadLineTimeStamp: '',
+                    phone: '',
+                    deductPoint: 0,
+                    deductPointAlready: 0,
+                    accountBalance: 0,
+                    freezeMoney: 0,
+                    dealMeasure: '',
+                    deadLineTime: '',
+                    deductFee: 0,
+                    reason: ''
+                },
+                myModal: false,
+                phone: '',
+                dealMeasure: '',
+                dealTimeStart: '',
+                dealTimeEnd: '',
+                tableColumns: [],
+                tableData: [],
+            }
+        },
+        created() {
+            this.getDataList()
+            this.getTableColumns()
+        },
+        methods: {
+            see() {
+                var self = this;
+                $.get("/console/sp/get?phone=" + self.addFormData.phone, {}, function (res) {
+                    if (res && res.status) {
+                        var data = res.data;
+                        self.addFormData.deductPointAlready = data.userRecord.deductPoint;
+                        self.addFormData.accountBalance = self.moneyFenToYuan(data.userAccount.accountBalance);
+                        self.addFormData.freezeMoney = self.moneyFenToYuan(data.userAccount.freezeMoney);
+                    }
+                })
+            },
+            decimal(value) {
+                var value = value.toString();
+                value = value.replace(/[^\d.]/g, ""); //清除"数字"和"."以外的字符
+                value = value.replace(/^\./g, ""); //验证第一个字符是数字
+                value = value.replace(/\.{2,}/g, "."); //只保留第一个, 清除多余的
+                value = value.replace(".", "$#$").replace(/\./g, "").replace("$#$", ".");
+                value = value.replace(/^(\-)*(\d+)\.(\d\d).*$/, '$1$2.$3'); //只能输入两个小数
+                return value;
+            }
+            ,
+            changePagesFun(page) {
+                // The simulated data is changed directly here, and the actual usage scenario should fetch the data from the server
+                this.page = page - 1;
+                this.getDataList();
+            }
+            ,
+            changePageSizeFun(size) {
+                // The simulated data is changed directly here, and the actual usage scenario should fetch the data from the server
+                this.size = size;
+                this.getDataList();
+            }
+            ,
+            dealTimeStartDataChange(data) {
+                this.dealTimeStart = data;
+            }
+            ,
+            dealTimeEndDataChange(data) {
+                this.dealTimeEnd = data;
+            }
+            ,
+            add() {
+                this.addFormData = {
+                    deadLineTimeStamp: '',
+                    phone: '',
+                    deductPoint: 0,
+                    deductPointAlready: 0,
+                    accountBalance: 0,
+                    freezeMoney: 0,
+                    dealMeasure: '',
+                    deadLineTime: '',
+                    deductFee: 0,
+                    reason: ''
+                };
+                this.myModal = 'true';
+            }
+            ,
+            edit(row) {
+                var self = this;
+                $.get("/console/sp/get?sellerId=" + row.sellerId, {}, function (res) {
+                    if (res && res.status) {
+                        var data = res.data;
+                        self.addFormData = {
+                            id: row.id,
+                            phone: row.other.phone,
+                            deductPoint: row.deductPoint,
+                            deductPointAlready: data.userRecord.deductPoint,
+                            accountBalance: self.moneyFenToYuan(data.userAccount.accountBalance),
+                            freezeMoney: self.moneyFenToYuan(data.userAccount.freezeMoney),
+                            dealMeasure: row.dealMeasure,
+                            deadLineTime: self.timeFormatter(row.deadLineTime),
+                            deadLineTimeStamp: new Date(row.deadLineTime),
+                            deductFee: self.moneyFenToYuan(row.deductFee),
+                            reason: row.reason
+                        };
+                        self.myModal = 'true';
+                    }
+                })
+            }
+            ,
+            ok() {
+                var self = this;
+                $.post("/console/sp/addAndEdit", this.addFormData, function (data) {
+                    if (data && data.status) {
+                        self.$Message.success('成功');
+                        self.getDataList();
+                    } else {
+                        self.$Message.error(data.msg);
+                    }
+                });
+            }
+            ,
+            getTableColumns() {
+                var self = this;
+                this.tableColumns = [
+                    {
+                        title: '创建时间',
+                        key: 'createTime',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", self.timeFormatter(row.createTime))
+                        }
+                    },
+                    {
+                        title: '手机号',
+                        key: '-',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", row.other.phone)
+                        }
+                    },
+                    {
+                        title: '处罚分类',
+                        key: 'dealMeasure',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", getDealMeasure(row.dealMeasure))
+                        }
+                    },
+                    {
+                        title: '扣分',
+                        key: 'deductPoint',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", row.deductPoint)
+                        }
+                    },
+                    {
+                        title: '状态',
+                        key: 'deadLineTime',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            var deadLineTime = row.deadLineTime;
+                            if (deadLineTime > new Date()) {
+                                return h("div", "已生效");
+                            }
+                            return h("div", "已过期");
+                        }
+                    },
+                    {
+                        title: '说明',
+                        key: 'reason',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", row.reason)
+                        }
+                    },
+                    {
+                        title: '扣款',
+                        key: 'deductFee',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", self.moneyFenToYuan(row.deductFee))
+                        }
+                    },
+                    {
+                        title: '操作人',
+                        key: 'operatorName',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            var row = params.row;
+                            return h("div", row.operatorName)
+                        }
+                    },
+                    {
+                        title: '操作',
+                        key: '-',
+                        className: 'demo-table-info-column',
+                        render: function (h, params) {
+                            return h('div', [h('Button', {
+                                props: {
+                                    type: 'primary',
+                                    size: 'small'
+                                },
+                                style: {
+                                    marginRight: '5px'
+                                },
+                                on: {
+                                    click: function () {
+                                        self.edit(params.row)
+                                    }
+                                }
+                            }, '修改')])
+                        }
+                    }]
+            }
+            ,
+            getDataList() {
+                var self = this;
+                $.get("/console/sp/getPage", {
+                    page: self.page,
+                    size: self.size,
+                    phone: self.phone,
+                    dealMeasure: self.dealMeasure,
+                    dealTimeStart: self.dealTimeStart,
+                    dealTimeEnd: self.dealTimeEnd,
+                }, function (res) {
+                    if (res.status) {
+                        self.tableData = res.data.content;
+                        self.totalElements = res.data.totalElements;
+                        self.tableData = res.data.content;
+                    } else {
+                        self.$Message.error(res.msg)
+                    }
+                })
+            }
+            ,
+            moneyFenToYuan(value, row, index) {
+                return (value * 0.01).toFixed(2);
+            }
+            ,
+            timeFormatter(value) {
+                if (value == null || value == "") {
+                    return "";
+                }
+                var date = new Date(value);
+                return format = date.format("yyyy-MM-dd hh:mm:ss");
+            }
+        }
+    })
+
+    function getDealMeasure(value, row, index) {
+        var str = "";
+        $.each(dealMeasureEnum, function (index, element) {
+            var code = element["code"];
+            var desc = element["desc"];
+            if (value != null && value != "" && value != undefined) {
+                if (code == value) {
+                    str = desc;
+                    return false;
+                }
+            }
+        })
+        return str;
+    }
+
+    /*]]>*/
+</script>
+</html>

@@ -2,6 +2,7 @@ package com.dyg.bidcenter.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * @author merz
@@ -14,5 +15,10 @@ public class PageController {
     @GetMapping("/")
     public String loginView() {
         return "login";
+    }
+
+    @GetMapping("/{path}")
+    public String page(@PathVariable("path") String path) {
+        return path;
     }
 }
