@@ -7,8 +7,4 @@ package com.dyg.bidcenter.cons;
  */
 public interface CommonCons {
     String USER_INFO = "user_info";
-
-    String SYS_AES_KEY = "afc6f0c6398b4d6fab5f33715bc8c537";
-
-    String QRCODEURL = "http://cms.merzjava.com/goods/?code=";
 }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
 <META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
@@ -10,9 +11,11 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>东阳光招投标网站</title>
+    <title>东阳光投标报价系统</title>
     <!-- import Vue.js -->
-    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>
+<!--    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>-->
+    <!--引入vue.min.js-->
+    <script src="../static/js/vue.min.js" th:src="@{../js/vue.min.js}"></script>
     <!-- import stylesheet -->
     <link href="http://unpkg.com/view-design/dist/styles/iview.css"
           th:src="@{http://unpkg.com/view-design/dist/styles/iview.css}" rel="stylesheet">
@@ -55,6 +58,23 @@
         font-size: 28px;
     }
 </style>
+<style>
+    .second_level_item {
+        display: inline-block;
+        border: 1px solid rgba(187, 187, 187, 100);
+        font-size: 14px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        margin: 0 0 5px 5px;
+        padding: 0 3px;
+        border-radius: 4px;
+    }
+    .second_level_item a {
+        margin-left: 5px;
+        color: red;
+    }
+</style>
 <body>
 <div id="app">
     <template>
@@ -67,23 +87,37 @@
                         <Content :style="{padding: '24px', minHeight: '900px', background: '#fff'}">
                             <Row>
                                 <i-col span="8">
-                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayward" @on-search="query"/>
+                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayword" @on-search="queryInput"/>
                                 </i-col>
-                                <i-col span="2" offset="14">
-                                    <i-button type="success" @click="modal1 = true">新增</i-button>
-                                    <i-button type="error" @click="deleteTable">删除</i-button>
+                                <i-col span="3" offset="13" shiro:hasAnyRoles="BUYER,BUYER_CHIEF">
+                                    <i-button type="success" @click="openModal1">新增</i-button>
+<!--                                    <i-button type="error" @click="deleteTable">删除</i-button>-->
+                                    <Poptip
+                                        confirm
+                                        title="确定删除数据?"
+                                        @on-ok="deleteTable"
+                                        @on-cancel="deleteCancel">
+                                        <i-button type="error">删除</i-button>
+                                    </Poptip>
                                 </i-col>
                             </Row>
                             <Row style="padding: 10px 0">
-                                <i-Table border :loading="loading" ref="selection" :columns="columns1" :data="data1"></i-Table>
+                                <i-Table border ref="selection" :columns="columns1" :data="data1">
+                                    <template slot-scope="{ row, index }" slot="action">
+<!--                                        <i-button :disabled="row._disabled" type="primary" size="small" @click="show(row)">编辑</i-button>-->
+                                        <i-button  type="primary" size="small" @click="show(row)">查看</i-button>
+                                    </template>
+                                </i-Table>
                             </Row>
                             <Row>
                                 <i-col span="8">
-                                    <i-button @click="handleSelectAll(true)">Set all selected</i-button>
-                                    <i-button @click="handleSelectAll(false)">Cancel all selected</i-button>
+                                    <i-button @click="handleSelectAll(true)">设置全选</i-button>
+                                    <i-button @click="handleSelectAll(false)">取消全选</i-button>
                                 </i-col>
-                                <i-col span="12" offset="4" style="float: right;">
-                                    <Page :total="page_total" show-total show-sizer show-elevator @on-change="page_change" @on-page-size-change="page_size"/>
+                                <i-col span="12" offset="4">
+                                    <div style="float: right;">
+                                        <Page :total="page_total" show-total show-sizer  @on-change="pageChange" @on-page-size-change="pageSize"/>
+                                    </div>
                                 </i-col>
                             </Row>
                         </Content>
@@ -95,11 +129,12 @@
         <Modal
                 title="新增标书"
                 v-model="modal1"
-                @on-ok="ok"
-                @on-cancel="cancel"
+                @on-ok="addBidEntity('addBidEntity')"
+                @on-cancel="cancel('addBidEntity')"
+                :loading="model1_loading"
                 ok-text="提交"
                 cancel-text="取消">
-            <i-Form :model="bidEntity" :label-width="80">
+            <i-Form ref="addBidEntity" :model="bidEntity" :rules="ruleBidEntity" :label-width="100">
                 <Form-Item label="标书编号" prop="number">
                     <i-Input type="text" v-model="bidEntity.number"></i-Input>
                 </Form-Item>
@@ -107,12 +142,120 @@
                     <i-Input type="text" v-model="bidEntity.name"></i-Input>
                 </Form-Item>
                 <Form-Item label="开标时间" prop="time">
-                    <date-picker type="datetime" placeholder="请选择开标时间" v-model="bidEntity.time"></date-picker>
+                    <date-picker type="datetime" :options="options" v-model="bidEntity.time" :value="bidEntity.time"  format="yyyy-MM-dd HH:mm" placeholder="请选择开标时间" @on-change="changeBidTime"></date-picker>
                 </Form-Item>
-                <Form-Item label="受邀供应商" prop="age">
-                    <i-select clearable multiple v-model="bidEntity.supplier">
-                        <i-option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</i-option>
-                    </i-select>
+                <Form-Item label="招标公司" prop="createrCompany" placeholder="请选择招标公司">
+                    <i-Select v-model="bidEntity.createrCompany">
+                        <i-Option v-for="(item, index) in companys" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
+                <Form-Item label="采购文件" prop="fileName">
+                    <Upload action="/uploadOne"
+                            :show-upload-list="false"
+                            :max-size="204800"
+                            :on-success="uploadSuccess"
+                            :on-exceeded-size="handleMaxSize" type="drag">
+                        <i-Input type="text"  v-model="bidEntity.fileName" placeholder="点击上传文件"></i-Input>
+                    </Upload>
+                </Form-Item>
+                <Form-Item label="受邀供应商" prop="suppliers">
+                    <!--<i-select clearable multiple v-model="bidEntity.suppliers">-->
+                        <!--<i-option v-for="item in supplierList" :value="item.id" :key="item.id">{{ item.companyName }}</i-option>-->
+                    <!--</i-select>-->
+                    <i-button @click="showBidSupplier">请添加受邀供应商</i-button>
+                </Form-Item>
+                <Form-Item>
+                    <div style="width: 100%;min-height: 100px;border: 1px solid rgba(187, 187, 187, 100);padding: 10px;">
+                        <div v-for="(item, index) in bidEntity.suppliers" class="second_level_item">
+                            <span>{{item.companyName}}</span>
+                            <a @click="deleteSecondLabel(index)">×</a>
+                        </div>
+                    </div>
+                </Form-Item>
+            </i-Form>
+        </Modal>
+
+        <Modal
+                title="公司筛选"
+                v-model="modal3"
+                @on-ok="addBidSupplier('addBidSupplierModal')"
+                @on-cancel="cancelBidSupplier('addBidSupplierModal')"
+                ok-text="提交"
+                cancel-text="取消">
+            <i-Form ref="addBidSupplierModal" :label-width="100">
+                <Form-Item label="一级标签">
+                    <i-Select style="width:200px" @on-change="selectFirstLabelChange">
+                        <i-Option v-for="item in firstLabelList" :value="item.id" :key="item.id">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
+                <Form-Item label="二级标签">
+                    <i-Select style="width:200px" @on-change="selectSecondLabelChange">
+                        <i-Option v-for="item in secondLabelList" :value="item.id" :key="item.id">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
+                <Transfer
+                        :data="dataSupplier"
+                        :target-keys="targetSupplier"
+                        :render-format="render"
+                        filterable
+                        :filter-method="filterMethod"
+                        @on-change="handleChange"></Transfer>
+            </i-Form>
+        </Modal>
+
+        <Modal
+                title="修改标书"
+                v-model="modal2"
+                @on-ok="updateBidEntity('updateBidEntity')"
+                @on-cancel="cancel('updateBidEntity')"
+                :loading="model2_loading"
+              >
+            <div slot="footer">
+                <Button type="primary" @click="cancelFP">取消</Button>
+            </div>
+            <i-Form ref="updateBidEntity" :model="bidEntity2" :rules="ruleBidEntity" :label-width="100">
+                <Form-Item label="标书编号" prop="number">
+                    <i-Input type="text" v-model="bidEntity2.number" disabled></i-Input>
+                </Form-Item>
+                <Form-Item label="标名" prop="name">
+                    <i-Input type="text" v-model="bidEntity2.name" disabled></i-Input>
+                </Form-Item>
+                <Form-Item label="开标时间" prop="time">
+                    <date-picker type="datetime" :options="options" format="yyyy-MM-dd HH:mm" :value="bidEntity2.time" placeholder="请选择开标时间"
+                                 @on-change="changeBidTime2" disabled></date-picker>
+                </Form-Item>
+                <Form-Item label="招标公司" prop="createrCompany" placeholder="请选择招标公司">
+                    <i-Select v-model="bidEntity2.createrCompany" disabled>
+                        <i-Option v-for="(item, index) in companys" :key="item.id" :value="item.code" disabled>{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
+
+                <Form-Item label="采购文件" prop="fileName">
+                    <i-Input type="text" v-model="bidEntity2.fileName" disabled></i-Input>
+                </Form-Item>
+<!--                <Form-Item label="采购文件" prop="fileName">-->
+<!--                    <Upload action="/uploadOne"-->
+<!--                            :show-upload-list="false"-->
+<!--                            :max-size="204800"-->
+<!--                            :on-success="uploadSuccess2"-->
+<!--                            :on-exceeded-size="handleMaxSize" type="drag">-->
+<!--                        <i-Input type="text" disabled v-model="bidEntity2.fileName" placeholder="点击上传文件"></i-Input>-->
+<!--                    </Upload>-->
+<!--                </Form-Item>-->
+                <Form-Item label="受邀供应商" prop="suppliers">
+                    <!--<i-select clearable multiple v-model="bidEntity.suppliers">-->
+                    <!--<i-option v-for="item in supplierList" :value="item.id" :key="item.id">{{ item.companyName }}</i-option>-->
+                    <!--</i-select>-->
+<!--                    <i-button @click="showBidSupplier" v-model="bidEntity2.suppliers" v-bind:disabled="bidEntity2.batchNumber != 1">请添加受邀供应商</i-button>-->
+                    <i-button @click="showBidSupplier" v-model="bidEntity2.suppliers" disabled>请添加受邀供应商</i-button>
+                </Form-Item>
+                <Form-Item>
+                    <div style="width: 100%;min-height: 100px;border: 1px solid rgba(187, 187, 187, 100);padding: 10px;">
+                        <div v-for="(item, index) in bidEntity2.suppliers" class="second_level_item">
+                            <span>{{item.companyName}}</span>
+<!--                            <a @click="deleteSecondLabel(index)">×</a>-->
+                        </div>
+                    </div>
                 </Form-Item>
             </i-Form>
         </Modal>
@@ -127,41 +270,37 @@
         data() {
             return {
                 activeName: '1-1',
-                kayward: '',
+                kayword: '',
                 page: 1,
                 page_size: 10,
                 page_total: 100,
-                loading: false,
-                cityList: [
-                    {
-                        value: 'New York',
-                        label: 'New York'
-                    },
-                    {
-                        value: 'London',
-                        label: 'London'
-                    },
-                    {
-                        value: 'Sydney',
-                        label: 'Sydney'
-                    },
-                    {
-                        value: 'Ottawa',
-                        label: 'Ottawa'
-                    },
-                    {
-                        value: 'Paris',
-                        label: 'Paris'
-                    },
-                    {
-                        value: 'Canberra',
-                        label: 'Canberra'
-                    }
-                ],
-                bidEntity: {
+                account: '',
+                department: '',
 
+                options: {
+                    disabledDate (date) {
+                        return date && date.valueOf() < Date.now() - 86400000;
+                    }
                 },
+
+                supplierList: [],
+                companys: [],
+                bidEntity: {},
+                bidEntity2: {},
                 modal1: false,
+                model1_loading: true,
+                modal2: false,
+                model2_loading: true,
+
+                modal3: false,
+                firstLabelList: [],
+                secondLabelList: [],
+                dataSupplier: [],
+                targetSupplier: [],
+
+                model_updatepwd: false,
+                pwdEntity: {},
+
                 columns1: [
                     {
                         type: 'selection',
@@ -169,80 +308,679 @@
                         align: 'center'
                     },
                     {
-                        title: 'Name',
+                        title: '编号',
+                        key: 'number'
+                    },
+                    {
+                        title: '标名',
                         key: 'name'
                     },
                     {
-                        title: 'Age',
-                        key: 'age'
+                        title: '发起人',
+                        key: 'creater'
                     },
                     {
-                        title: 'Address',
-                        key: 'address'
+                        title: '开标时间',
+                        key: 'time',
+                        render: (h, params) => {
+                            return h('span', params.row.time);
+                        }
+                    },
+                    {
+                        title: '受邀供应商',
+                        key: 'suppliers',
+                        render: (h, params) => {
+                            var arr = params.row.supplierNames;
+                            var newArr = [];
+                            arr.forEach((e, index)=>{
+                                newArr.push(h('div', (index+1) + '. ' + e),)
+                            });
+                            return h('div',newArr);
+                        }
+                    },
+                    {
+                        title: '状态',
+                        key: 'status'
+                    },
+                    {
+                        title: '操作',
+                        slot: 'action',
+                        width: 150,
+                        align: 'center'
                     }
                 ],
-                data1: [
-                    {
-                        name: 'John Brown',
-                        age: 18,
-                        address: 'New York No. 1 Lake Park',
-                        date: '2016-10-03'
-                    },
-                    {
-                        name: 'Jim Green',
-                        age: 24,
-                        address: 'London No. 1 Lake Park',
-                        date: '2016-10-01'
-                    },
-                    {
-                        name: 'Joe Black',
-                        age: 30,
-                        address: 'Sydney No. 1 Lake Park',
-                        date: '2016-10-02'
-                    },
-                    {
-                        name: 'Jon Snow',
-                        age: 26,
-                        address: 'Ottawa No. 2 Lake Park',
-                        date: '2016-10-04'
-                    }
-                ]
+                ruleBidEntity: {
+                    number: [
+                        { required: true, message: '必须设置标书编号', trigger: 'blur' }
+                    ],
+                    name: [
+                        { required: true, message: '必须设置标名', trigger: 'blur' }
+                    ],
+                    time: [
+                        { required: true, message: '必须设置开标时间', trigger: 'blur' }
+                    ],
+                    suppliers: [
+                        { required: true, type: 'array', message: '必须设置受邀供应商', trigger: 'change' }
+                    ],
+                    fileName: [
+                        { required: true, message: '必须设置采购文件', trigger: 'change' }
+                    ]
+                },
+                data1: []
             }
         },
+        created: function () {
+            this.account = '[[${session.user_info.account}]]';
+            this.query();
+            this.getDict('company');
+
+            var thiz = this;
+            axios.get('/supplier/queryAll')
+                .then(response => {
+                    response = response.data;
+                    if (response.code == 200) {
+                        thiz.supplierList = response.data;
+                    } else {
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    }
+                })
+                .catch(function (error) { // 请求失败处理
+                    thiz.$Message.error({
+                        content: error,
+                        duration: 10,
+                        closable: true
+                    });
+                });
+
+            //获取当前用户所在部门
+            axios.get('/bid/queryDm?account=' + this.account)
+                .then(response => {
+                    response = response.data;
+                    if (response.code == 200) {
+                        this.department = response.data;
+                    } else {
+                        thiz.$Message.info({
+                            content: '用户部门获取失败',
+                            duration: 10,
+                            closable: true
+                        });
+                    }
+                })
+                .catch(function (error) { // 请求失败处理
+                    thiz.$Message.error({
+                        content: error,
+                        duration: 10,
+                        closable: true
+                    });
+                });
+        },
         methods: {
+            getDict(type) {
+                var obj = {
+                    type: type,
+                    isValid: "1"
+                };
+                var thiz = this;
+                axios.post('/dict/getList', obj)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (type == 'company') {
+                                thiz.companys = response.data
+                            } else if (type == 'role') {
+                                thiz.positions = response.data
+                            }
+                        } else {
+                            console.log(response.msg)
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error)
+                    });
+            },
+            showBidSupplier() {
+                this.queryLabel(0);
+                this.modal3 = true;
+            },
+            addBidSupplier(name) {
+                this.targetSupplier.forEach(id => {
+                    this.dataSupplier.forEach(item => {
+                        if (item.key == id) {
+                            if (this.modal1) {
+                                // 新增
+                                if (this.bidEntity.suppliers == undefined) {
+                                    this.bidEntity.suppliers = [];
+                                }
+                                var obj = {
+                                    companyName: item.label,
+                                    id: item.key
+                                };
+                                this.bidEntity.suppliers.push(obj)
+                            } else if (this.modal2) {
+                                // 编辑
+                                if (this.bidEntity2.suppliers == undefined) {
+                                    this.bidEntity2.suppliers = [];
+                                }
+                                var obj = {
+                                    companyName: item.label,
+                                    id: item.key
+                                };
+                                this.bidEntity2.suppliers.push(obj)
+                            }
+                        }
+                    })
+                });
+                var arr = [];
+                if (this.modal1) {
+                    this.bidEntity.suppliers.forEach(item => {
+                        var flag = true;
+                        arr.forEach(item2 => {
+                            if (item2.id == item.supplierId) {
+                                flag = false
+                            }
+                        });
+                        if (flag) {
+                            arr.push(item)
+                        }
+                    });
+                    this.bidEntity.suppliers = arr;
+                } else if (this.modal2) {
+                    this.bidEntity2.suppliers.forEach(item => {
+                        var flag = true;
+                        arr.forEach(item2 => {
+                            if (item2.id == item.supplierId) {
+                                flag = false
+                            }
+                        });
+                        if (flag) {
+                            arr.push(item)
+                        }
+                    });
+                    this.bidEntity2.suppliers = arr;
+                }
+                this.modal3 = false;
+                this.dataSupplier = [];
+                this.targetSupplier = [];
+            },
+            cancelBidSupplier(name) {
+                this.modal3 = false;
+                this.dataSupplier = [];
+                this.targetSupplier = [];
+            },
+            selectFirstLabelChange(value) {
+                this.queryLabel(value);
+            },
+            selectSecondLabelChange(value) {
+                var thiz = this;
+                axios.get('/supplierLabel/findAll/' + value)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            // 获取选中的
+                            thiz.dataSupplier = thiz.dataSupplier.filter(item => {
+                                return this.targetSupplier.indexOf(item.key) >= 0;
+                            });
+                            // 过滤出还未选择的
+                            var res = response.data;
+                            res = res.filter(item => {
+                                var flag = true;
+                                thiz.dataSupplier.forEach(item2 => {
+                                    if (item.supplierId == item2.key) {
+                                        flag = false;
+                                    }
+                                });
+                                return flag;
+                            });
+                            res.forEach((item, i) => {
+                                thiz.dataSupplier.push({
+                                    key: res[i].supplierId,
+                                    label: res[i].supplierName,
+                                    description: 'The desc of content  ' + i
+                                });
+                            })
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            filterMethod (data, query) {
+                if (data.label != null) {
+                    return data.label.indexOf(query) > -1;
+                }
+            },
+            render(item) {
+                return item.label;
+            },
+            handleChange (newTargetKeys, direction, moveKeys) {
+                this.targetSupplier = newTargetKeys;
+            },
+            deleteSecondLabel(index) {
+                if (this.modal1) {
+                    this.modal1 = false;
+                    var arr = this.bidEntity.suppliers;
+                    this.bidEntity.suppliers = [];
+                    arr.forEach((item, i) => {
+                        if (index != i) {
+                            this.bidEntity.suppliers.push(item)
+                        }
+                    })
+                    this.modal1 = true;
+                } else if (this.modal2) {
+                    this.modal2 = false;
+                    var arr = this.bidEntity2.suppliers;
+                    this.bidEntity2.suppliers = [];
+                    arr.forEach((item, i) => {
+                        if (index != i) {
+                            this.bidEntity2.suppliers.push(item)
+                        }
+                    })
+                    this.modal2 = true;
+                }
+
+            },
+            queryLabel(id) {
+                var thiz = this,
+                    url = '/label/queryAll';
+                if (id != undefined) {
+                    url += '?id=' + id;
+                }
+                axios.get(url)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (id != 0) {
+                                thiz.secondLabelList = response.data;
+                            } else {
+                                thiz.firstLabelList = response.data;
+                            }
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            uploadSuccess(response, file, fileList) {
+                var thiz = this;
+                if (response == '') {
+                    thiz.$Message.info({
+                        content: '上传失败,请刷新页面重试',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                this.$set(this.bidEntity,"fileName", response.fileName);
+                this.$set(this.bidEntity,"fileUrl", response.fileUrl);
+            },
+            uploadSuccess2(response, file, fileList) {
+                var thiz = this;
+                if (response == '') {
+                    thiz.$Message.info({
+                        content: '上传失败,请刷新页面重试',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                this.$set(this.bidEntity2,"fileName", response.fileName);
+                this.$set(this.bidEntity2,"fileUrl", response.fileUrl);
+            },
+            handleMaxSize (file) {
+                this.$Notice.warning({
+                    title: '超过文件大小限制',
+                    desc: '文件：' + file.name + ' 太大了, 最大200M.'
+                });
+            },
+            changeBidTime (time) {
+                this.bidEntity.time=time;
+            },
+            changeBidTime2 (time) {
+                this.bidEntity2.time=time;
+            },
+            openModal1(){
+              // this.bidEntity.time = new Date();
+                this.bidEntity.createrCompany = this.department;
+               this.modal1 = true;
+            },
             deleteTable() {
                 var selected = this.$refs.selection.getSelection();
+                if(selected.length===0){
+                    this.$Message.error({
+                        content: '请先勾选要删除的数据!',
+                        duration: 3,
+                        closable: true
+                    });
+                }
                 selected = selected.map(item => {
-                    return item.name
+                    return item.id
                 });
-                console.log(selected)
+                if (selected.length == 0) {
+                    return
+                }
+                var thiz = this;
+                axios.get('/bid/delete?ids=' + selected.join(","))
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.query();
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            deleteCancel () {
+                this.$refs.selection.selectAll(false);
             },
             handleSelectAll (status) {
                 this.$refs.selection.selectAll(status);
             },
-            ok () {
-                console.log(this.bidEntity)
-                this.$Message.info('Clicked ok');
+            addBidEntity (name) {
+                var thiz = this;
+                var inviteBidEntity = this.bidEntity;
+                var time1 = (new Date(this.bidEntity.time)).getTime(); //得到毫秒数
+                var time2 = new Date().getTime();
+                if(time2-time1 > 0){
+                    this.$Message.error({
+                        content: '开标时间必须大于系统时间',
+                        duration: 10,
+                        closable: true
+                    });
+                    this.model1_loading = false;
+                    this.$nextTick(() => {
+                        this.model1_loading = true
+                    });
+                    return;
+                }
+                this.$refs[name].validate((valid) => {
+                    if (valid) {
+                        axios.post('/bid/add', this.bidEntity)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    thiz.query();
+                                    this.bidEntity = {};
+                                    this.modal1 = false; // 关闭窗口
+
+                                    //调用短信通知接口
+                                    axios.post('/consume/inviteBid',inviteBidEntity)
+                                        .then(response => {
+                                            response = response.data;
+                                            if (response.code == 200) {
+
+                                            }
+                                        })
+                                        .catch(function (error) { // 请求失败处理
+                                            thiz.$Message.error({
+                                                content: error,
+                                                duration: 10,
+                                                closable: true
+                                            });
+                                        });
+                                } else {
+                                    this.model1_loading = false;
+                                    this.$nextTick(() => {
+                                        this.model1_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                this.model1_loading = false;
+                                this.$nextTick(() => {
+                                    this.model1_loading = true
+                                })
+                            });
+                    } else {
+                        this.model1_loading = false;
+                        this.$nextTick(() => {
+                            this.model1_loading = true
+                        })
+                    }
+                })
             },
-            cancel () {
-                this.$Message.info('Clicked cancel');
+            show(row) {
+                var now = Date.parse(new Date()),
+                    time = Date.parse(new Date(row.time));
+                this.bidEntity2=Object.assign({}, row);
+                this.modal2 = true;
+                // if (time - now > 0) {
+                //     this.bidEntity2=Object.assign({}, row);
+                //     this.modal2 = true;
+                // } else {
+                //     this.$Message.info({
+                //         content: '已经开标，请刷新重试',
+                //         duration: 10,
+                //         closable: true
+                //     });
+                // }
             },
-            page_change (page) {
-                console.log(page)
+            updateBidEntity(name) {
+                var thiz = this;
+                var inviteUpBidEntity = this.bidEntity2;
+                this.$refs[name].validate((valid) => {
+                    if (valid) {
+                        axios.post('/bid/update', this.bidEntity2)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    thiz.data1.forEach(function (item, index) {
+                                        if (item.id == thiz.bidEntity2.id) {
+                                            var supps = [];
+                                            thiz.bidEntity2.suppliers.forEach(function (item) {
+                                                supps.push(item.companyName)
+                                            });
+                                            thiz.bidEntity2.supplierNames=supps;
+                                            new Vue.set(thiz.data1,index,thiz.bidEntity2)
+                                        }
+                                    });
+                                    thiz.bidEntity2 = {};
+                                    thiz.modal2 = false; // 关闭窗口
+
+                                    //调用短信通知接口
+                                    axios.post('/consume/inviteBid',inviteUpBidEntity)
+                                        .then(response => {
+                                            response = response.data;
+                                            if (response.code == 200) {
+
+                                            }
+                                        })
+                                        .catch(function (error) { // 请求失败处理
+                                            thiz.$Message.error({
+                                                content: error,
+                                                duration: 10,
+                                                closable: true
+                                            });
+                                        });
+                                } else {
+                                    thiz.model2_loading = false;
+                                    thiz.$nextTick(() => {
+                                        thiz.model2_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                thiz.model2_loading = false;
+                                thiz.$nextTick(() => {
+                                    thiz.model2_loading = true
+                                })
+                            });
+                    } else {
+                        this.model2_loading = false;
+                        this.$nextTick(() => {
+                            this.model2_loading = true
+                        })
+                    }
+                })
             },
-            page_size (size) {
-                console.log(size)
+            //查看取消
+            cancelFP(){
+                this.modal2 = false; // 关闭窗口
+            },
+            cancel (name) {
+                this.bidEntity = {};
+                this.bidEntity2 = {};
+                this.$refs[name].resetFields();
+            },
+            pageChange (page) {
+                this.page=page;
+                this.query()
+            },
+            pageSize (size) {
+                this.page_size=size;
+                this.page=1;
+                this.query()
+            },
+            queryInput() {
+                this.page=1;
+                this.query()
             },
             query() {
-                console.log(this.kayward)
-                // axios.get('/json')
-                //     .then(response => (console.log("111   " + response)))
-                //     .catch(function (error) { // 请求失败处理
-                //         console.log(error);
-                //     });
+                var thiz = this,
+                    url = '/bid/pageQuery/'+this.page+'/'+this.page_size;
+                if (this.kayword != '') {
+                    url += '?kayword=' + this.kayword;
+                }
+                axios.get(url)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.data1 = response.data.list;
+                            thiz.data1.forEach(function (item) {
+                                //if (item.createrAccount != thiz.account || item.status=='已开标') {
+                                if (item.createrAccount != thiz.account) {
+                                    item._disabled = 'true'
+                                }
+                            });
+                            thiz.page = response.data.pageNum;
+                            thiz.page_size = response.data.pageSize;
+                            thiz.page_total = response.data.total;
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
             },
             menu_select(name) {
                 menuSelect.menu_select(name)
+            },
+            logout() {
+                axios.get('/user/logout')
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            window.location.href='/'
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            updatePwd() {
+                var thiz = this;
+                if (this.pwdEntity.password != this.pwdEntity.passwordSecond) {
+                    this.$Message.error({
+                        content: '两个密码输入不一致',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                axios.post('/user/updateUser', this.pwdEntity)
+                    .then(response => {
+                        response = response.data;
+                        // if (response.code == 200) {
+                        //     thiz.logout()
+                        // }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            cancelPwd(name) {
+                this.$refs[name].resetFields();
             }
         }
     });

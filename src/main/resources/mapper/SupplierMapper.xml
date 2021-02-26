@@ -2,4 +2,48 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dyg.bidcenter.mapper.SupplierMapper">
 
+    <select id="querySupplierByBidId" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+        t2.*
+        from sys_bid_document t1
+        inner join sys_supplier t2 on t2.id=t1.supplier_id
+        where t1.is_valid=1 and t1.bid_id=#{id}
+    </select>
+    <select id="findByAccount" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+        t1.account,
+        t2.*
+        from sys_user t1
+        inner join sys_supplier t2 on t2.is_valid=1 and t2.user_id=t1.id
+        where t1.account=#{account} and t1.is_valid=1
+    </select>
+
+    <select id="getPhoneNumber" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+       *
+        from sys_supplier t
+        where t.id=#{id} and t.is_valid=1
+    </select>
+
+    <select id="getPhoneNumberById" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+       *
+        from sys_supplier t
+        where t.id=#{id} and t.is_valid=1
+    </select>
+
+    <select id="getSupplierByPhone" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+       *
+        from sys_supplier t
+        where t.phone_number=#{phoneNumber} and t.is_valid=1
+    </select>
+
+    <select id="getSupplierByCompanyName" resultType="com.dyg.bidcenter.entity.SysSupplierEntity">
+        select
+       *
+        from sys_supplier t
+        where t.company_name=#{companyName} and t.is_valid=1
+    </select>
+
 </mapper>

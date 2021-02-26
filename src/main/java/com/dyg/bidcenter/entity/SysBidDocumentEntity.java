@@ -19,42 +19,43 @@ import java.util.Objects;
 @DynamicUpdate
 @DynamicInsert
 public class SysBidDocumentEntity {
-    private int id;
-    private int bidId;
-    private int supplierId;
+    private Integer id;
+    private Integer bidId;
+    private Integer supplierId;
     private String fileName;
     private String fileUrl;
-    private Timestamp time;
+    private String time;
     private Integer isValid;
     private Timestamp createdTime;
 
     @Id
     @Column(name = "id")
-    public int getId() {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
     @Basic
     @Column(name = "bid_id")
-    public int getBidId() {
+    public Integer getBidId() {
         return bidId;
     }
 
-    public void setBidId(int bidId) {
+    public void setBidId(Integer bidId) {
         this.bidId = bidId;
     }
 
     @Basic
     @Column(name = "supplier_id")
-    public int getSupplierId() {
+    public Integer getSupplierId() {
         return supplierId;
     }
 
-    public void setSupplierId(int supplierId) {
+    public void setSupplierId(Integer supplierId) {
         this.supplierId = supplierId;
     }
 
@@ -80,11 +81,11 @@ public class SysBidDocumentEntity {
 
     @Basic
     @Column(name = "time")
-    public Timestamp getTime() {
+    public String getTime() {
         return time;
     }
 
-    public void setTime(Timestamp time) {
+    public void setTime(String time) {
         this.time = time;
     }
 

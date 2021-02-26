@@ -60,7 +60,12 @@ public class WebMvcConfigurer extends WebMvcConfigurerAdapter {
             ResponseUtil result = null;
             // 业务失败的异常，如“账号或密码错误”
             if (e instanceof ServiceException) {
-                result = ResponseUtil.result(ResultCode.ERROR.getCode(), e.getCause().getMessage());
+                String errorMsg = "";
+                while (e.getCause() != null) {
+                    e = (Exception) e.getCause();
+                }
+                errorMsg = e.getMessage();
+                result = ResponseUtil.result(ResultCode.ERROR.getCode(), errorMsg);
             } else if (e instanceof AuthenticationException) {
                 result = ResponseUtil.result(ResultCode.AUTHENTICATIONEXCEPTION);
             } else if (e instanceof UnauthorizedException) {

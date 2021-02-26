@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
-<META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
-<META HTTP-EQUIV="Cache-Control" CONTENT="no-store, must-revalidate"/>
-<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT"/>
-<META HTTP-EQUIV="expires" CONTENT="0"/>
+<meta http-equiv="pragma" CONTENT="no-cache"/>
+<meta http-equiv="Cache-Control" CONTENT="no-store, must-revalidate"/>
+<meta http-equiv="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT"/>
+<meta http-equiv="expires" CONTENT="0"/>
+
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>东阳光招投标网站</title>
+    <title>东阳光投标报价系统</title>
     <!-- import Vue.js -->
-    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>
+<!--    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>-->
+    <!--引入vue.min.js-->
+    <script src="../static/js/vue.min.js" th:src="@{../js/vue.min.js}"></script>
     <!-- import stylesheet -->
     <link href="http://unpkg.com/view-design/dist/styles/iview.css"
           th:src="@{http://unpkg.com/view-design/dist/styles/iview.css}" rel="stylesheet">
@@ -80,18 +84,34 @@
     .center-header-number{
         text-align: left;
         color: #000000;
-        font-size: 20px;
+        font-size: 17px;
     }
     .center-right{
         border: 1px solid rgba(187, 187, 187, 100);
         margin: 10px;
-        height: 200px;
-        font-size: 28px;
+        min-height: 200px;
+        /*font-size: 28px;*/
+        font-size: 1.5vw;;
         text-align: center;
         color: #000000;
     }
     .center-right>div {
-        margin: 34px 60px;
+        text-align: center;
+        line-height: 100px;
+        overflow: hidden;
+    }
+    .blue {
+        color: #FFFFFF;
+        background: rgba(50, 145, 248, 100);
+    }
+    .batch_number {
+        text-align: left;
+        color: #FFFFFF;
+        font-size: 16px;
+        margin-left: 10px;
+        background: rgba(50, 145, 248, 100);
+        border: 1px solid rgba(50, 145, 248, 100);
+        border-radius: 5px;
     }
 </style>
 <body>
@@ -105,47 +125,197 @@
                     <Layout :style="{padding: '0 24px 24px'}">
                         <Content :style="{padding: '24px', minHeight: '1200px', background: '#fff'}">
                             <Row>
-                                <i-col span="8">
-                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayward" @on-search="query"/>
+                                <i-col span="12" style="margin-bottom: 10px">
+                                    <i-Button style="margin-right: 10px" :class="{blue:text===-1}" @click="changeStatus(-1)">进行中</i-Button>
+                                    <i-Button style="margin-right: 10px" :class="{blue:text===1}" @click="changeStatus(1)">已结束</i-Button>
+                                    <i-Button shiro:hasRole="SUPPLIER" :class="{blue:text===3}" @click="changeStatus(3)">中标项目</i-Button>
                                 </i-col>
                             </Row>
+                            <Row>
+<!--                                <i-col span="8">-->
+<!--                                    <i-Select>-->
+<!--                                        <i-Option  search enter-button v-for="(item, index) in companys" :key="item.id" :value="item.code" v-model="kayword" @on-search="queryInput">{{ item.name }}</i-Option>-->
+<!--                                    </i-Select>-->
+<!--                                </i-col>-->
+                                <i-col span="8">
+                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayword" @on-search="queryInput"/>
+                                </i-col>
+
+                            </Row>
+
+<!--                            <Form ref="formSearch" inline>-->
+<!--                                <FormItem style="margin:auto;" prop="kayword">-->
+<!--&lt;!&ndash;                                    <Input search v-model="kayword" placeholder="请输入名称"></Input>&ndash;&gt;-->
+<!--                                    <i-input search  placeholder="输入搜索关键字" v-model="kayword"/>-->
+<!--                                </FormItem>-->
+<!--                                <FormItem style="margin:auto;">-->
+<!--                                    <Button type="primary" @on-search="queryInput">搜索</Button>-->
+<!--                                </FormItem>-->
+<!--                            </Form>-->
+
+
                             <Row style="padding: 10px 0">
                                 <template>
                                     <List item-layout="vertical">
-                                        <template v-for="item in data" :key="item.title">
+                                        <template v-for="item in data" :key="item.number">
                                             <row style="border: 1px solid rgba(187, 187, 187, 100);margin-bottom: 10px;">
-                                                <i-Col span="18">
+                                                <i-Col span="24">
                                                     <div>
                                                         <Row class="center-header">
                                                             <i-Col span="2" class="center-header-title">
                                                                 <span class="center-header-title-icon">|</span>
                                                                 <span class="center-header-title-text">项目</span>
                                                             </i-Col>
-                                                            <i-Col span="18" class="center-header-desc">
-                                                                东阳光集团宜都工业园区智慧管理中心设计方案
+                                                            <i-Col span="16" class="center-header-desc">
+                                                                {{item.name}}
                                                             </i-Col>
-                                                            <i-Col span="4" class="center-header-number">
-                                                                编号：9527
+                                                            <i-Col span="6" class="center-header-number">
+                                                                编号：{{item.number}}
                                                             </i-Col>
                                                         </Row>
                                                     </div>
-                                                    <div style="padding: 10px">
-                                                        <i-Table border :loading="loading" ref="selection" :columns="columns1" :data="data1">
-                                                            <template slot-scope="{ row, index }" slot="action">
-                                                                <i-button type="primary" size="small" @click="modal2 = true">编辑</i-button>
-                                                            </template>
-                                                        </i-Table>
+                                                    <div>
+                                                        <Row class="center-header">
+                                                            <i-Col span="2" class="center-header-title">
+                                                                <span class="center-header-desc" style="font-size: 16px">立标人：</span>
+                                                            </i-Col>
+                                                            <i-Col span="8" class="center-header-desc" style="font-size: 16px">
+                                                                {{item.createrUserName}}
+                                                            </i-Col>
+                                                            <i-Col span="2" class="center-header-title">
+                                                                <span class="center-header-desc" style="font-size: 16px">采购公司：</span>
+                                                            </i-Col>
+                                                            <i-Col span="8" class="center-header-desc" style="font-size: 16px">
+                                                                {{item.createrCompanyName}}
+                                                            </i-Col>
+                                                            <i-Col span="4" class="center-header-desc" style="font-size: 16px">
+                                                                <div>
+                                                                    <Icon type="ios-cloud-download"></Icon>
+                                                                    <a @click="download(item.fileUrl)">采购文件下载</a>
+                                                                </div>
+                                                            </i-Col>
+                                                        </Row>
                                                     </div>
                                                 </i-Col>
-                                                <i-Col span="6">
-                                                    <div class="center-right">
-                                                        <div>距离投标结束</div>
-                                                        <div>1天12时23分02秒</div>
+                                                <i-Col span="24">
+                                                    <div v-for="bidDto in item.bidDtos" :key="bidDto.id">
+                                                        <div>
+                                                            <span class="batch_number">第{{bidDto.batchNumber}}轮</span>
+                                                        </div>
+                                                        <row>
+                                                        <i-col span="18">
+                                                            <div style="padding: 10px">
+                                                                <i-Table border ref="selection" :columns="columns" :data="bidDto.bidDocumentDtos">
+                                                                    <template slot-scope="{ row, index }" slot="index">
+                                                                        <span>{{index + 1}}</span>
+                                                                    </template>
+                                                                    <template slot-scope="{ row, index }" slot="time">
+                                                                        <span v-if="row.time == null">暂未投标</span>
+                                                                        <span v-else>{{ row.time }}</span>
+                                                                    </template>
+                                                                    <template slot-scope="{ row, index }" slot="download">
+                                                                        <div shiro:hasAnyRoles="BUYER,AUDITOR,BUYER_ADMIN,BUYER_CHIEF">
+                                                                            <div v-if="bidDto.status == 1">
+                                                                                <div v-if="row.fileUrl != null">
+                                                                                    <Icon type="ios-cloud-download"></Icon>
+                                                                                    <a @click="download(row.fileUrl)">文件下载</a>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div v-else>
+                                                                                <div v-if="row.fileUrl != null">
+                                                                                    <span>投标暂未结束，禁止下载</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div shiro:hasRole="SUPPLIER">
+                                                                            <div v-if="bidDto.status == -1">
+                                                                                <Upload v-if="row.fileUrl == null"
+                                                                                        action="/uploadSupplierBidFile"
+                                                                                        :show-upload-list="true"
+                                                                                        :data="row"
+                                                                                        :format="['pdf']"
+                                                                                        :max-size="204800"
+                                                                                        :on-success="uploadSuccess"
+                                                                                        :on-format-error="handleFormatError"
+                                                                                        :on-exceeded-size="handleMaxSize">
+                                                                                    <i-Button icon="ios-cloud-upload-outline">上传文件</i-Button>
+                                                                                </Upload>
+                                                                                <div v-else>
+                                                                                    <a @click="download(row.fileUrl)">{{row.fileName}}</a>
+                                                                                    <a style="color: red" title="点击删除" @click="deleteFile(row)">&nbsp;&nbsp;&nbsp;x</a>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div v-else>
+                                                                                <span>投标已结束</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </template>
+                                                                </i-Table>
+                                                            </div>
+                                                        </i-col>
+                                                        <i-col span="6">
+                                                            <div class="center-right" v-if="bidDto.status == -1">
+                                                                <div>
+                                                                    <Row>
+                                                                        <i-Col span="16" offset="4">距离投标结束</i-Col>
+                                                                    </Row>
+                                                                </div>
+                                                                <div>
+                                                                    <Row>
+                                                                        <i-Col span="16" offset="4">{{bidDto.bidTimeStr}}</i-Col>
+                                                                    </Row>
+                                                                </div>
+                                                            </div>
+                                                            <div class="center-right" v-if="bidDto.status == 1">
+                                                                <div>投标已结束</div>
+                                                                <div shiro:hasAnyRoles="BUYER,BUYER_CHIEF">
+                                                                    <div v-if="bidDto.successfulSupplier || bidDto.nextBatchSupplier">
+                                                                        <div style="height: 50px;line-height: 50px;overflow: hidden;text-align: center;font-size: 24px;" v-if="bidDto.successfulSupplier"
+                                                                             v-for="name in bidDto.successfulSupplier" :label="name" :key="name">{{name}}</div>
+                                                                        <div style="height: 50px;line-height: 50px;overflow: hidden;text-align: center;font-size: 24px;" v-if="bidDto.nextBatchSupplier"
+                                                                             v-for="name in bidDto.nextBatchSupplier" :label="name" :key="name">{{name}}</div>
+                                                                        <div style="height: 50px;line-height: 50px;overflow: hidden;text-align: center;">
+                                                                            <div v-if="bidDto.isNextBatch">
+                                                                                参加下轮投标
+                                                                            </div>
+                                                                            <div else>中标</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div v-else style="line-height: 60px;">
+                                                                        <i-Button size="large" @click="updateModel(bidDto, 1)" :disabled="bidDto._disabled" type="success" style="width: 80%;">请选择中标公司</i-Button>
+                                                                        <i-Button size="large" @click="updateModel(bidDto, 2)"  :disabled="bidDto._disabled" type="primary" style="width: 80%;">请选择参加下轮投标公司</i-Button>
+                                                                    </div>
+                                                                </div>
+                                                                <div shiro:hasAnyRoles="BUYER_ADMIN,AUDITOR">
+                                                                    <div v-if="bidDto.successfulSupplier">
+                                                                        <div style="line-height: 60px;">
+                                                                            <div style="height: 50px;line-height: 50px;overflow: hidden;text-align: center;font-size: 24px;" v-for="name in bidDto.successfulSupplier" :label="name" :key="name">{{name}}</div>
+                                                                        </div>
+                                                                        <div style="height: 50px;line-height: 50px;overflow: hidden;text-align: center;">中标</div>
+                                                                    </div>
+                                                                    <div v-else>
+                                                                        可以下载文档浏览
+                                                                    </div>
+                                                                </div>
+                                                                <div shiro:hasRole="SUPPLIER">
+                                                                    <div v-if="bidDto.isSuccessful">
+                                                                        恭喜您已中标
+                                                                    </div>
+                                                                    <div v-else-if="bidDto.isNextBatch">
+                                                                        参加下轮投标
+                                                                    </div>
+                                                                    <div v-else>
+                                                                        禁止上传文件
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </i-col>
+                                                        </row>
                                                     </div>
                                                 </i-Col>
                                             </row>
                                         </template>
-                                        <Page :total="page_total" style="float: right;" show-total show-sizer show-elevator @on-change="page_change" @on-page-size-change="page_size"/>
+                                        <Page :total="page_total" style="float: right;" show-total show-sizer  @on-change="pageChange" @on-page-size-change="pageSize"/>
                                     </List>
                                 </template>
                             </Row>
@@ -154,6 +324,24 @@
                 </Layout>
             </Layout>
         </div>
+
+
+        <Modal
+                :title="titleMap[dialogStatus]"
+                v-model="modal1"
+                @on-ok="addSuccessfulSupplier"
+                @on-cancel="cancel"
+                :loading="model1_loading"
+                ok-text="提交"
+                cancel-text="取消">
+            <div style="margin-bottom: 10px;">
+                <span v-if="typeStatus === true">开标时间：</span>
+                <date-picker v-if="typeStatus === true" type="datetime" :options="options" :value="bidEntity.time" format="yyyy-MM-dd HH:mm" placeholder="请选择开标时间" @on-change="changeBidTime"></date-picker>
+            </div>
+            <checkbox-group v-model="successfulSupplier">
+                    <Checkbox border style="margin-bottom: 5px" v-for="item in bidSuppliers" :label="item.id" :key="item.id">{{item.companyName}}</Checkbox>
+            </checkbox-group>
+        </Modal>
     </template>
 </div>
 </body>
@@ -166,102 +354,500 @@
         data() {
             return {
                 activeName: '1-2',
-                kayward: '',
-                loading: false,
+                kayword: '',
+                page: 1,
+                page_size: 10,
                 page_total: 100,
-                data: [
-                    {
-                        title: 'This is title 1',
-                        description: 'This is description, this is description, this is description22.',
-                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
-                        content: 'This is the content, this is the content, this is the content, this is the content111.'
-                    },
-                    {
-                        title: 'This is title 2',
-                        description: 'This is description, this is description, this is description22.',
-                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
-                        content: 'This is the content, this is the content, this is the content, this is the content111.'
-                    },
-                    {
-                        title: 'This is title 3',
-                        description: 'This is description, this is description, this is description22.',
-                        avatar: 'https://dev-file.iviewui.com/userinfoPDvn9gKWYihR24SpgC319vXY8qniCqj4/avatar',
-                        content: 'This is the content, this is the content, this is the content, this is the content111.'
+                text: -1,
+                account: '',
+                //companys: [],
+                model_updatepwd: false,
+                pwdEntity: {},
+                options: {
+                    disabledDate (date) {
+                        return date && date.valueOf() < Date.now() - 86400000;
                     }
-                ],
-                columns1: [
+                },
+                modal1: false,
+                model1_loading: true,
+                successfulSupplier: undefined,
+                bidSuppliers: [],
+
+                //中标供应商or选择参加下轮投标供应商(动态显示不同的标题)
+                titleMap: {
+                    zbEquipment:'请选择中标供应商',
+                    xzEquipment: "请选择参加下轮投标供应商"
+                },
+                //新增和编辑弹框标题
+                dialogStatus: "",
+                modalType: 1,
+                typeStatus: false,
+
+                bidEntity: {},
+
+                data: [],
+                columns: [
                     {
-                        type: 'selection',
-                        width: 60,
+                        title: '序号',
+                        slot: 'index',
+                        width: 100,
                         align: 'center'
                     },
                     {
-                        title: 'Name',
-                        key: 'name'
+                        title: '供应商',
+                        key: 'companyName'
                     },
                     {
-                        title: 'Age',
-                        key: 'age'
-                    },
-                    {
-                        title: 'Address',
-                        key: 'address'
-                    },
-                    {
-                        title: 'Action',
-                        slot: 'action',
-                        width: 150,
+                        title: '投标时间',
+                        slot: 'time',
+                        width: 200,
                         align: 'center'
-                    }
-                ],
-                data1: [
-                    {
-                        name: 'John Brown',
-                        age: 18,
-                        address: 'New York No. 1 Lake Park',
-                        date: '2016-10-03'
                     },
                     {
-                        name: 'Jim Green',
-                        age: 24,
-                        address: 'London No. 1 Lake Park',
-                        date: '2016-10-01'
-                    },
-                    {
-                        name: 'Joe Black',
-                        age: 30,
-                        address: 'Sydney No. 1 Lake Park',
-                        date: '2016-10-02'
-                    },
-                    {
-                        name: 'Jon Snow',
-                        age: 26,
-                        address: 'Ottawa No. 2 Lake Park',
-                        date: '2016-10-04'
+                        title: '文件下载',
+                        slot: 'download',
+                        width: 200,
+                        align: 'center'
                     }
                 ]
             }
         },
+        created: function () {
+            this.account = '[[${session.user_info.account}]]';
+            var thiz = this;
+            this.query();
+            //this.getDict('company');
+            setInterval(function () {
+                thiz.timeConvert()
+            }, 1000)
+        },
         methods: {
-            page_change (page) {
-                console.log(page)
+            // getDict(type) {
+            //     var obj = {
+            //         type: type,
+            //         isValid: "1"
+            //     };
+            //     var thiz = this;
+            //     axios.post('/dict/getList', obj)
+            //         .then(response => {
+            //             response = response.data;
+            //             if (response.code == 200) {
+            //                 if (type == 'company') {
+            //                     thiz.companys = response.data
+            //                 } else if (type == 'role') {
+            //                     thiz.positions = response.data
+            //                 }
+            //             } else {
+            //                 console.log(response.msg)
+            //             }
+            //         })
+            //         .catch(function (error) { // 请求失败处理
+            //             console.log(error)
+            //         });
+            // },
+            changeBidTime (time) {
+                this.bidEntity.time=time;
+            },
+            updateModel(row, type) {
+                var thiz = this;
+                axios.get('/bidDocument/getBidCompanys/' + row.id)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.bidSuppliers = response.data
+                        } else {
+                            console.log(response.msg)
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error)
+                    });
+                this.modal1 = true;
+                if(type===1){
+                    this.dialogStatus = "zbEquipment";
+                    this.typeStatus = false;
+                }else if(type===2){
+                    this.dialogStatus = "xzEquipment"
+                    this.typeStatus = true;
+                }
+                this.modalType = type;
+                this.bidEntity=Object.assign({}, row);
+                this.bidEntity.time = new Date();
+            },
+            addSuccessfulSupplier() {
+                var thiz = this;
+                if (this.successfulSupplier != undefined) {
+                    this.bidEntity.successfulSupplier = this.successfulSupplier.toString();
+                    if (this.modalType == 1) {
+                        this.bidEntity.time = null;
+                        axios.post('/bid/update', this.bidEntity)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    //调用短信通知接口
+                                    // axios.post('/consume/advise', thiz.bidEntity)
+                                    //     .then(response => {
+                                    //         response = response.data;
+                                    //         if (response.code == 200) {
+                                    //
+                                    //         }
+                                    //     })
+                                    //     .catch(function (error) { // 请求失败处理
+                                    //         thiz.$Message.error({
+                                    //             content: '短信通知失败',
+                                    //             duration: 10,
+                                    //             closable: true
+                                    //         });
+                                    //     });
+
+                                    thiz.data.forEach(function (item1, i1) {
+                                        item1.bidDtos.forEach(function (item2, i2) {
+                                            if (item2.id == thiz.bidEntity.id) {
+                                                thiz.bidEntity.successfulSupplier = response.data.successfulSupplier.split(',');
+                                                new Vue.set(thiz.data[i1].bidDtos,i2,thiz.bidEntity)
+                                            }
+                                        })
+                                    });
+
+                                    thiz.bidEntity = {};
+                                    thiz.successfulSupplier = undefined;
+                                    thiz.modal1 = false; // 关闭窗口
+                                } else {
+                                    thiz.model1_loading = false;
+                                    thiz.$nextTick(() => {
+                                        thiz.model1_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                thiz.model1_loading = false;
+                                thiz.$nextTick(() => {
+                                    thiz.model1_loading = true
+                                })
+                            });
+                    } else if (this.modalType == 2) {
+                        var bTime =  (new Date(this.bidEntity.time)).getTime(); //得到毫秒数
+                        var nowTime = new Date().getTime();
+                        if(!this.bidEntity.time){
+                            this.$Message.error({
+                                content: '请填写开标时间',
+                                duration: 10,
+                                closable: true
+                            });
+                            this.model1_loading = false;
+                            this.$nextTick(() => {
+                                this.model1_loading = true
+                            });
+                            return;
+                       }
+                        if(nowTime - bTime > 0){
+                            this.$Message.error({
+                                content: '开标时间必须大于系统时间',
+                                duration: 10,
+                                closable: true
+                            });
+                            this.model1_loading = false;
+                            this.$nextTick(() => {
+                                this.model1_loading = true
+                            });
+                            return;
+                        }
+                        axios.post('/bid/add', this.bidEntity)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    //调用短信通知接口
+                                    axios.post('/consume/inviteBid',this.bidEntity)
+                                        .then(response => {
+                                            response = response.data;
+                                            if (response.code == 200) {
+
+                                            }
+                                        })
+                                        .catch(function (error) { // 请求失败处理
+                                            thiz.$Message.error({
+                                                content: '短信通知失败',
+                                                duration: 10,
+                                                closable: true
+                                            });
+                                        });
+                                    thiz.query();
+                                    thiz.bidEntity = {};
+                                    thiz.successfulSupplier = undefined;
+                                    thiz.modal1 = false; // 关闭窗口
+                                } else {
+                                    thiz.model1_loading = false;
+                                    thiz.$nextTick(() => {
+                                        thiz.model1_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                thiz.model1_loading = false;
+                                thiz.$nextTick(() => {
+                                    thiz.model1_loading = true
+                                })
+                            });
+                    }
+                } else {
+                    thiz.model1_loading = false;
+                    thiz.$nextTick(() => {
+                        thiz.model1_loading = true
+                    });
+                    thiz.$Message.error({
+                        content: '请选择中标公司！',
+                        duration: 10,
+                        closable: true
+                    });
+                }
+            },
+            cancel() {
+
+            },
+            download (path) {
+                var num1 = path.indexOf('\\');
+                var num2 = path.indexOf('/');
+                var sp = '';
+                if (num1 != -1) {
+                    sp = path.split('\\');
+                } else if (num2 != -1) {
+                    sp = path.split('/');
+                }
+                window.location.href='download?path='+sp[0]+'&fileName='+sp[1]
+            },
+            deleteFile(row) {
+                var thiz = this;
+                axios.get('/bidDocument/deleteFile/' + row.id)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            row.fileName=null;
+                            row.fileUrl=null;
+                            row.time=null;
+                            this.data.forEach(function (item1, i1) {
+                                item1.bidDtos.forEach(function (item2, i2) {
+                                    item2.bidDocumentDtos.forEach(function (item3, i3) {
+                                        if (item3.id == row.id) {
+                                            thiz.data[i1].bidDtos[i2].bidDocumentDtos[i3] = response;
+                                            new Vue.set(thiz.data[i1].bidDtos[i2].bidDocumentDtos,i3,thiz.data[i1].bidDtos[i2].bidDocumentDtos[i3])
+                                        }
+                                    })
+                                })
+                            })
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            uploadSuccess(response, file, fileList) {
+                var thiz = this;
+                if (response == '') {
+                    thiz.$Message.info({
+                        content: '上传失败,请刷新页面重试',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                this.data.forEach(function (item1, i1) {
+                    item1.bidDtos.forEach(function (item2, i2) {
+                        item2.bidDocumentDtos.forEach(function (item3, i3) {
+                            if (item3.id == response.id) {
+                                thiz.data[i1].bidDtos[i2].bidDocumentDtos[i3] = response;
+                                new Vue.set(thiz.data[i1].bidDtos[i2].bidDocumentDtos,i3,thiz.data[i1].bidDtos[i2].bidDocumentDtos[i3])
+                            }
+                        })
+                    })
+                })
+            },
+            handleFormatError (file) {
+                this.$Notice.warning({
+                    title: '文件格式不正确',
+                    desc: '文件：' + file.name + ' 格式错误, 请选择PDF格式.'
+                });
+            },
+            handleMaxSize (file) {
+                this.$Notice.warning({
+                    title: '超过文件大小限制',
+                    desc: '文件：' + file.name + ' 太大了, 最大200M.'
+                });
+            },
+            changeStatus (index) {
+                this.text=index;
+                this.page_size=10;
+                this.page=1;
+                this.kayword='';
+                this.query();
             },
             menu_select(name) {
                 menuSelect.menu_select(name)
             },
-            page_change (page) {
-                console.log(page)
+            pageChange (page) {
+                this.page=page;
+                this.query()
             },
-            page_size (size) {
-                console.log(size)
+            pageSize (size) {
+                this.page_size=size;
+                this.page=1;
+                this.query()
+            },
+            queryInput() {
+                this.page=1;
+                this.query()
             },
             query() {
-                console.log(this.kayward)
-                // axios.get('/json')
-                //     .then(response => (console.log("111   " + response)))
-                //     .catch(function (error) { // 请求失败处理
-                //         console.log(error);
-                //     });
+                var thiz = this,
+                    text = this.text,
+                    kayword = this.kayword,
+                    url = '/bidDocument/pageQuery/'+this.page+'/'+this.page_size+'?status='+text;
+                if (this.kayword != '') {
+                    url += '&kayword=' + kayword;
+                }
+                axios.get(url)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.data = response.data.list;
+                            thiz.data.forEach(item1 => {
+                                item1.bidDtos.forEach(item2 => {
+                                    if (item2.successfulSupplier != null) {
+                                        item2.successfulSupplier = item2.successfulSupplier.split(',');
+                                    }
+                                    if (item2.nextBatchSupplier != null) {
+                                        item2.nextBatchSupplier = item2.nextBatchSupplier.split(',');
+                                    }
+                                    if (item2.createrAccount != thiz.account && text=='1') {
+                                        item2._disabled = 'true'
+                                    }
+                                });
+                            });
+                            thiz.page = response.data.pageNum;
+                            thiz.page_size = response.data.pageSize;
+                            thiz.page_total = response.data.total;
+                            thiz.timeConvert();
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            timeConvert() {
+                var thiz = this;
+                var now = Date.parse(new Date());
+                this.data.forEach(function (item, i) {
+                    item.bidDtos.forEach(function (item2, i2) {
+                        var dataTime = Date.parse(new Date(item2.time));
+                        var msTime = dataTime-now;
+                        if (msTime == 0) {
+                            item2.status = 1;
+                            new Vue.set(thiz.data[i].bidDtos,i2,thiz.data[i].bidDtos[i2])
+                        } else if (msTime > 0) {
+                            var time = msTime /1000;
+                            var day = Math.floor(time /60 /60 /24);
+                            var hour = Math.floor(time /60 /60) %24;
+                            var minute = Math.floor(time /60) %60;
+                            var second = Math.floor(time) %60;
+                            item2.bidTimeStr = `${day}天${hour}时${minute}分${second}秒`;
+                            new Vue.set(thiz.data[i].bidDtos,i2,thiz.data[i].bidDtos[i2])
+                        }
+                    })
+                })
+            },
+            logout() {
+                axios.get('/user/logout')
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            window.location.href='/'
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            updatePwd() {
+                var thiz = this;
+                if (this.pwdEntity.password != this.pwdEntity.passwordSecond) {
+                    this.$Message.error({
+                        content: '两个密码输入不一致',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                axios.post('/user/updateUser', this.pwdEntity)
+                    .then(response => {
+                        response = response.data;
+                        // if (response.code == 200) {
+                        //     thiz.logout()
+                        // }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            cancelPwd(name) {
+                this.$refs[name].resetFields();
             }
         }
     })

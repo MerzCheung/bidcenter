@@ -1,20 +1,24 @@
 <template>
     <i-Menu :active-name="activeName" theme="light" width="auto" @on-select="menu_select">
-        <Menu-item name="1-1" >
+        <Menu-item name="1-1" shiro:hasAnyRoles="BUYER,AUDITOR,BUYER_ADMIN,BUYER_CHIEF">
             <Icon type="ios-navigate"></Icon>
             投标编辑
         </Menu-item>
-        <Menu-item name="1-2">
+        <Menu-item name="1-2" shiro:hasAnyRoles="BUYER,SUPPLIER,AUDITOR,BUYER_ADMIN,BUYER_CHIEF">
             <Icon type="ios-keypad"></Icon>
             标书管理
         </Menu-item>
-        <Menu-item name="1-3">
+        <Menu-item name="1-3" shiro:hasAnyRoles="ADMIN,SUPPLIER">
             <Icon type="ios-analytics"></Icon>
             供应商信息管理
         </Menu-item>
-        <Menu-item name="1-4">
+        <Menu-item name="1-4" shiro:hasAnyRoles="ADMIN,BUYER,AUDITOR,BUYER_ADMIN,BUYER_CHIEF">
             <Icon type="ios-man"></Icon>
             采购员/审计员信息
+        </Menu-item>
+        <Menu-item name="1-5" shiro:hasAnyRoles="ADMIN">
+            <Icon type="ios-pricetags"></Icon>
+            标签定义
         </Menu-item>
     </i-Menu>
 </template>

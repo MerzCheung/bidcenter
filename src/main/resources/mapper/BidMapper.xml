@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dyg.bidcenter.mapper.BidMapper">
+
+    <resultMap id="pageQueryMap" type="com.dyg.bidcenter.entity.SysBidDto">
+        <id column="number" property="number"/>
+        <result column="name" property="name"/>
+        <result column="creater_account" property="createrAccount"/>
+        <result column="creater_company" property="createrCompany"/>
+        <result column="bid_file_name" property="fileName"/>
+        <result column="bid_file_url" property="fileUrl"/>
+        <collection property="bidDtos" ofType="com.dyg.bidcenter.entity.SysBidDto">
+            <id column="id" property="id"/>
+            <result column="number" property="number"/>
+            <result column="name" property="name"/>
+            <result column="status" property="status"/>
+            <result column="bid_time" property="time"/>
+            <result column="successful_supplier" property="successfulSupplier"/>
+            <result column="next_batch_supplier" property="nextBatchSupplier"/>
+            <result column="batch_number" property="batchNumber"/>
+            <result column="creater_account" property="createrAccount"/>
+            <collection property="bidDocumentDtos" ofType="com.dyg.bidcenter.entity.SysBidDocumentDto">
+                <id column="bid_doc_id" property="id"/>
+                <result column="id" property="bidId"/>
+                <result column="file_name" property="fileName"/>
+                <result column="company_name" property="companyName"/>
+                <result column="time" property="time"/>
+                <result column="file_url" property="fileUrl"/>
+                <result column="number" property="number"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="pageQuery" resultMap="pageQueryMap">
+        select
+        t2.id,
+        t2.number,
+        t2.name,
+        t2.creater_account,
+        t2.creater_company,
+        t2.successful_supplier,
+        t2.time as bid_time,
+        t2.file_name as bid_file_name,
+        t2.file_url as bid_file_url,
+        t2.next_batch_supplier,
+        t2.batch_number,
+        t4.company_name,
+        t3.id as bid_doc_id,
+        t3.file_name,
+        t3.file_url,
+        t3.time,
+        case
+        when t2.time &lt;= now() then '1'
+        when t2.time > now() then '-1'
+        else 0 end as status
+        from (
+        select t6.*
+        from sys_bid t6
+        inner join (select group_concat(t5.id) as ids from (
+        select
+        t1.id, t1.number
+        from sys_bid t1
+        where t1.is_valid=1
+        <if test="department != null and department != ''">
+            and (t1.creater_company=#{department} or t1.creater_account=#{account})
+        </if>
+        <if test="kayword != null and kayword != ''">
+            and (t1.number like concat('%',TRIM(#{kayword}),'%')
+            or t1.name like concat('%',TRIM(#{kayword}),'%')
+            OR t1.creater_company = (
+            SELECT
+            d.code
+            FROM
+            sys_dict d
+            WHERE
+            d.name = TRIM(#{kayword}))
+            or t1.creater_account = (SELECT u.account from sys_user u WHERE u.id =
+            (SELECT b.user_id FROM sys_buyer b where b.username = TRIM(#{kayword}))))
+        </if>
+        <if test="status != null and status != ''">
+            <if test='status == "-1" '>
+                --  进行中
+                and t1.time > now()
+            </if>
+            <if test='status == "1" '>
+                -- 已结束
+                and t1.time &lt;= now()
+            </if>
+            <if test='status == "3" '>
+                -- 中标项目
+                and t1.successful_supplier is not null
+            </if>
+        </if>
+        order by t1.id desc
+        ) t5 group by number limit #{pageNo},#{size}) t7 on FIND_IN_SET(t6.id, t7.ids)
+        ) t2
+        inner join sys_bid_document t3 on t3.is_valid=1 and t3.bid_id=t2.id
+        <if test="supplierId != null">
+            and t3.supplier_id=#{supplierId}
+        </if>
+        inner join sys_supplier t4 on t3.supplier_id=t4.id
+        <if test="status != null and status != ''">
+            <if test='status == "-1" '>
+                and t4.is_valid=1
+            </if>
+        </if>
+        order by t2.created_time desc
+    </select>
+
+    <select id="getTotal" resultType="Integer">
+        select
+        count(distinct  t1.id)
+        from sys_bid t1
+        inner join sys_bid_document t3 on t3.is_valid=1 and t3.bid_id=t1.id
+        <if test="supplierId != null">
+            and t3.supplier_id=#{supplierId}
+        </if>
+        inner join sys_supplier t4 on t3.supplier_id=t4.id
+        <if test="status != null and status != ''">
+            <if test='status == "-1" '>
+                and t4.is_valid=1
+            </if>
+        </if>
+        where t1.is_valid=1
+        <if test="department != null and department != ''">
+            and (t1.creater_company=#{department} or t1.creater_account=#{account})
+        </if>
+        <if test="kayword != null and kayword != ''">
+            and (t1.number like concat('%',TRIM(#{kayword}),'%')
+            or t1.name like concat('%',TRIM(#{kayword}),'%')
+            OR t1.creater_company = (
+            SELECT
+            d.code
+            FROM
+            sys_dict d
+            WHERE
+            d.name = TRIM(#{kayword}))
+            or t1.creater_account = (SELECT u.account from sys_user u WHERE u.id =
+            (SELECT b.user_id FROM sys_buyer b where b.username = TRIM(#{kayword}))))
+        </if>
+        <if test="status != null and status != ''">
+            <if test='status == "-1" '>
+                --  进行中
+                and t1.time > now()
+            </if>
+            <if test='status == "1" '>
+                --  已结束
+                and t1.time &lt;= now()
+            </if>
+            <if test='status == "3" '>
+                -- 中标项目
+                and t1.successful_supplier is not null
+            </if>
+        </if>
+    </select>
+
+    <!--查询标书-->
+    <select id="pageBidQuery" resultType="com.dyg.bidcenter.entity.SysBidEntity">
+        select
+        *
+        from sys_bid t1
+        <include refid="queryWhere"/>
+        order by t1.created_time desc
+        limit #{pageNo}, #{size}
+    </select>
+
+    <select id="getStatusTotal" resultType="Integer">
+        select
+        count(1)
+        from sys_bid t1
+        <include refid="queryWhere"/>
+    </select>
+
+    <sql id="queryWhere">
+        where t1.is_valid=1
+        <if test="department != null and department != ''">
+            and (t1.creater_company=#{department} or t1.creater_account=#{account})
+        </if>
+        <if test="kayword != null and kayword != ''">
+            <choose>
+                <when test="kayword=='未开标'">
+                    and t1.time > now()
+                </when>
+                <when test="kayword=='已开标'">
+                    and t1.time &lt;= now()
+                </when>
+                <otherwise>
+                    and (t1.number like concat('%',TRIM(#{kayword}),'%')
+                    or t1.name like concat('%',TRIM(#{kayword}),'%')
+                    or t1.creater_account = (SELECT u.account from sys_user u WHERE u.id =
+                    (SELECT b.user_id FROM sys_buyer b where b.username = #{kayword})))
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+
+</mapper>

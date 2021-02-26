@@ -1,7 +1,7 @@
 drop table if exists sys_user;
 CREATE TABLE `sys_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `account` varchar(11) NOT NULL COMMENT '账号',
+  `account` varchar(50) NOT NULL COMMENT '账号',
   `password` varchar(50) NOT NULL COMMENT '密码',
   `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
   `created_time` datetime NOT NULL,
@@ -75,7 +75,7 @@ create table sys_buyer (
   user_id int(11) NOT NULL comment '用户主键',
   username varchar (100) DEFAULT NULL comment '姓名',
   phone_number varchar (20) DEFAULT NULL comment '联系电话',
-  department varchar (300) DEFAULT NULL comment '任职部门',
+  department varchar (300) DEFAULT NULL comment '任职公司',
   position varchar (300) DEFAULT NULL comment '职位',
   `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
   `created_time` datetime NOT NULL,
@@ -88,7 +88,14 @@ create table sys_bid (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
   number varchar (100) DEFAULT NULL comment '标书编号',
   name varchar (100) DEFAULT NULL comment '标名',
+  creater_account varchar (11) NOT NULL comment '发起人帐号',
+  creater_company varchar (15) NOT NULL comment '发起人公司',
   time datetime DEFAULT NULL comment '开标时间',
+  file_name varchar (100) DEFAULT NULL comment '文件名',
+  file_url varchar (300) DEFAULT NULL comment '文件地址',
+  successful_supplier varchar(30) DEFAULT NULL comment '中标人',
+  batch_number int(3) NOT NULL comment '投标批次',
+  next_batch_supplier varchar(30) DEFAULT NULL comment '下批次投标人',
   `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
   `created_time` datetime NOT NULL,
   `modified_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -100,11 +107,47 @@ create table sys_bid_document (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
   bid_id int(11) NOT NULL comment '标书主键',
   supplier_id int(11) NOT NULL comment '供应商主键',
-  file_name varchar (100) NOT NULL comment '文件名',
-  file_url varchar (300) NOT NULL comment '文件地址',
-  time datetime NOT NULL comment '投标时间',
+  file_name varchar (100) DEFAULT NULL comment '文件名',
+  file_url varchar (300) DEFAULT NULL comment '文件地址',
+  time datetime DEFAULT NULL comment '投标时间',
   `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
   `created_time` datetime NOT NULL,
   `modified_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   primary key(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标书管理';
+
+
+drop table if exists sys_dict;
+create table sys_dict (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
+  type varchar(15) NOT NULL comment '类型',
+  code varchar(15) NOT NULL comment '编码',
+  name varchar (100) NOT NULL comment '名称',
+  `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
+  `created_time` datetime NOT NULL,
+  `modified_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  primary key(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='字典表';
+
+
+drop table if exists sys_label;
+create table sys_label (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
+  name varchar (100) NOT NULL comment '名称',
+  parent_id int(11) DEFAULT 0 comment '父类',
+  `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
+  `created_time` datetime NOT NULL,
+  `modified_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  primary key(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签';
+
+drop table if exists sys_supplier_label;
+create table sys_supplier_label (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
+  supplier_id int(11) NOT NULL comment '供应商ID',
+  label_id int(11) NOT NULL comment '标签ID',
+  `is_valid` int(1) DEFAULT 1 COMMENT '是否有效 1：有效 0：无效',
+  `created_time` datetime NOT NULL,
+  `modified_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  primary key(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商标签';

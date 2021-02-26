@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dyg.bidcenter.mapper.BuyerMapper">
+
+    <select id="getEntityByAccount" resultType="com.dyg.bidcenter.entity.SysBuyerEntity">
+        select
+        t2.*
+        from sys_user t1
+        inner join sys_buyer t2 on t2.is_valid=1 and t2.user_id=t1.id
+        where t1.is_valid=1 and t1.account=#{account}
+    </select>
+
+    <select id="findByAccount" resultType="com.dyg.bidcenter.entity.SysBuyerEntity">
+        select
+        t1.account,
+        t2.*
+        from sys_user t1
+        inner join sys_buyer t2 on t2.is_valid=1 and t2.user_id=t1.id
+        where t1.account=#{account} and t1.is_valid=1
+    </select>
+</mapper>

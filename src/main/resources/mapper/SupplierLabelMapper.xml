@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dyg.bidcenter.mapper.SupplierLabelMapper">
+    <insert id="save">
+        insert into sys_supplier_label(supplier_id, label_id, created_time)
+        values
+        <foreach collection="collect" item="item" separator=",">
+            (#{supplierId}, #{item.labelId}, NOW())
+        </foreach>
+    </insert>
+    <update id="deleteBatch">
+        update sys_supplier_label
+        set is_valid=0
+        where id in
+        <foreach collection="collect" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getSupplierLabel" resultType="com.dyg.bidcenter.entity.SysSupplierLabelEntity">
+        select
+        t1.id,
+        t2.id as labelId,
+        t2.name
+        from sys_supplier_label t1
+        inner join sys_label t2 on t2.is_valid=1 and t1.label_id=t2.id
+        where t1.is_valid=1 and t1.supplier_id=#{supplierId}
+    </select>
+    <select id="findAll" resultType="com.dyg.bidcenter.entity.SysSupplierLabelEntity">
+        SELECT
+        l.id,
+        l.supplier_id AS supplierId,
+        l.supplier_id AS supplierName,
+        l.label_id
+        FROM
+        sys_supplier_label l
+        INNER JOIN sys_supplier s ON l.supplier_id = s.id
+        WHERE
+        s.is_valid = 1
+        AND l.is_valid = 1
+        AND label_id = #{labelId}
+    </select>
+</mapper>

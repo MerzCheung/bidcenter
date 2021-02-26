@@ -10,73 +10,390 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>东阳光招投标网站</title>
-    <link rel="stylesheet" href="../static/css/all-min.css" th:href="@{../css/all-min.css}">
-    <link rel="stylesheet" type="text/css" href="../static/css/login.css" th:href="@{../css/login.css}"/>
+    <title>东阳光投标报价系统</title>
+<!--    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>-->
+    <!--引入vue.min.js-->
+    <script src="../static/js/vue.min.js" th:src="@{../js/vue.min.js}"></script>
+    <!-- import stylesheet -->
+    <link href="http://unpkg.com/view-design/dist/styles/iview.css"
+          th:src="@{http://unpkg.com/view-design/dist/styles/iview.css}" rel="stylesheet">
+    <!-- import iView -->
+    <script src="http://unpkg.com/view-design/dist/iview.min.js"
+            th:src="@{http://unpkg.com/view-design/dist/iview.min.js}"></script>
 </head>
-<body onload="calSelecterHeight()" class="h100b" style="margin:0;padding:0;overflow:hidden;">
-    <div id="login_content">
-        <div id="login_wrap">
-            <div id="login_bg" class="slideBox">
-                <ul id="scroll_ul" class="slideImgs">
-                    <li class="active">
-                        <img src="../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload.jpg}">
-                    </li>
-                </ul>
-            </div>
-
-            <form method="post" action="http://joa.dyg.com.cn:9080/seeyon/main.do?method=login" id="login_form"
-                  name="loginform" onsubmit="checkPwdStrength();">
-                <div id="login_area_div" class="login_area_t_b"
-                     style="background: rgba(255, 255, 255, 0.4); left: 0px; top: inherit; bottom: 0%;">
-                    <div class="login_area_body">
-
-                        <div class="login_box">
-                            <div class="pic">
-                                <div class="pic_box"><img src="../static/imgs/pic.gif" th:src="@{../imgs/pic.gif}"/>
-                                </div>
-                                <div class="pic_box_bg"></div>
-                            </div>
-                            <div class="login_top" style="padding-top: 45px">
-                                <!-- 用户名 -->
-                                <div class="username">
-                                    <em class="login_username_em"></em><input id="login_username" name="login_username"
-                                                                              type="text" style="border:0;"/>
-                                </div>
-                                <!-- 密码 -->
-                                <div class="password">
-                                    <em clas="login_password_em"></em><input id="login_password" name="login_password"
-                                                                             type="password"/>
-                                </div>
-                                <input type="hidden" id="login_validatePwdStrength" name="login_validatePwdStrength"
-                                       value="4">
-
-                                <!-- 登陆按钮 -->
-                                <div class="login_btn">
-                                    <input type="button" id="login_button" class="point" value="登 录"
-                                           onClick="loginButtonOnClickHandler();"/>
-                                    <input id="submit_button" type="submit" style="display: none" value=""/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="login_bottom_div" class="login_bottom">
-                            <div class="fzIntall_area">
-                            <span class="zhixin" title="找回密码？"><a onclick="retrievePassword();"><font
-                                    color="white">找回密码？</font></a></span>
-                            </div>
-
-                        </div>
-                        <!-- 密码错误显示 -->
-                        <div id="login_error" class="login_error" style="display:none"></div>
-                    </div>
-
+<style>
+    #login_body {
+        width: 540px;
+        height: 380px;
+        margin: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 10px;
+        color: #333333;
+    }
+    #login_body2 {
+        width: 540px;
+        height: 380px;
+        background-color: #fff;
+        opacity: 0.4;
+        margin: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 10px;
+    }
+    .login_compant {
+        width: 100%;
+        height: 30%;
+        font-size: 28px;
+        text-align: center;
+        padding: 20px;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+    .login_from {
+        width: 100%;
+        height: 50%;
+        font-size: 14px;
+        padding: 10px 75px;
+    }
+    .login_from_item {
+        width: 390px;
+        height: 35px;
+        border: 1px solid rgba(187, 187, 187, 100);
+        margin: 15px 0;
+        line-height: 30px;
+    }
+    .login_from_item span {
+        color: #999999;
+        margin: 0 5px;
+    }
+    .login_from_item input {
+        width: 80%;
+        height: 80%;
+        border: none;
+        outline: medium;
+        background:transparent;
+    }
+    .login_from button {
+        width: 390px;
+        height: 40px;
+        border-radius: 4px;
+        text-align: center;
+        background-color: #2D93CA;
+        color: white;
+        border: none;
+    }
+    .login_bottom {
+        width: 100%;
+        height: 20%;
+        font-size: 14px;
+        padding: 10px 75px;
+    }
+    .login_bottom :nth-child(1) {
+        float: left;
+    }
+    .login_bottom :nth-child(2) {
+        float: right;
+    }
+</style>
+<body class="h100b" style="margin:0;padding:0;overflow:hidden;">
+    <div id="app">
+        <div id="login_content">
+            <div id="login_wrap">
+                <div id="login_bg" class="slideBox">
+                    <ul id="scroll_ul" class="slideImgs">
+                        <li class="active">
+                            <img src="../static/imgs/fileUpload3.jpg" style="width:1920px;height:100%;display:block;" th:src="@{../imgs/fileUpload3.jpg}">
+                        </li>
+                    </ul>
                 </div>
-            </form>
+                <div id="login_body2"></div>
+                <div id="login_body">
+                    <div class="login_compant">东阳光投标报价系统</div>
+                    <div class="login_from">
+                        <div class="login_from_item">
+                            <span>帐号</span>
+                            <input type="text" v-model="username">
+                        </div>
+                        <div class="login_from_item">
+                            <span>密码</span>
+                            <input type="password" v-model="password">
+                        </div>
+                        <button @click="login()">登陆</button>
+                    </div>
+                    <div class="login_bottom">
+                        <a @click="onRegister">注册</a>
+                        <a target="_blank" th:href="@{https://passport.jd.com}">忘记密码?</a>
+                    </div>
+                </div>
+            </div>
+            <div id="login_logo" style="top: 6%; left: 3%;position: absolute;">
+                <img src="../static/imgs/fileUpload2.jpg" th:src="@{../imgs/fileUpload2.jpg}">
+            </div>
         </div>
-        <div id="login_logo" style="top: 6%; left: 3%;">
-            <img src="../static/imgs/fileUpload2.jpg" th:src="@{../imgs/fileUpload2.jpg}">
-        </div>
+
+        <Modal
+                title="供应商注册"
+                v-model="registerModal"
+                @on-ok="addSupplierEntity('addSupplierEntity')"
+                @on-cancel="cancel('addSupplierEntity')"
+                :loading="registerModal_loading"
+                ok-text="提交"
+                cancel-text="取消">
+            <i-Form ref="addSupplierEntity" :model="supplierEntity" :rules="ruleSupplierEntity" :label-width="80">
+                <Form-Item label="公司名" prop="companyName">
+                    <i-Input type="text" v-model="supplierEntity.companyName" placeholder="请输入公司名"></i-Input>
+                </Form-Item>
+                <Form-Item label="负责人" prop="principal">
+                    <i-Input type="text" v-model="supplierEntity.principal" placeholder="请输入负责人姓名"></i-Input>
+                </Form-Item>
+                <Form-Item label="联系地址" prop="address">
+                    <i-Input type="text" v-model="supplierEntity.address" placeholder="请输入联系地址"></i-Input>
+                </Form-Item>
+                <Form-Item label="联系电话" prop="phoneNumber">
+                    <i-Input type="text" v-model="supplierEntity.phoneNumber" placeholder="请输入联系电话"></i-Input>
+                </Form-Item>
+                <Form-Item label="验证码"  prop="smsCode">
+                    <Row>
+                        <i-Col span="18">
+                        <i-Input class="code" v-model="supplierEntity.smsCode" placeholder="请输入验证码"></i-Input>
+                        </i-Col>
+                        <i-Col span="6">
+                            <i-Button @click="sendCode" style="width: 100%;">{{smsCodeText}}</i-Button>
+                        </i-Col>
+                    </Row>
+                </Form-Item>
+                <Form-Item label="新增帐号" prop="account">
+                    <i-Input type="text" v-model="supplierEntity.account" placeholder="请设置账号"></i-Input>
+                </Form-Item>
+                <Form-Item label="密码设置" prop="password">
+                    <i-Input type="password" v-model="supplierEntity.password" placeholder="请设置密码"></i-Input>
+                </Form-Item>
+                <Form-Item label="密码确认" prop="passwordSecond">
+                    <i-Input type="password" v-model="supplierEntity.passwordSecond" placeholder="请确认密码"></i-Input>
+                </Form-Item>
+            </i-Form>
+        </Modal>
+
     </div>
 </body>
+<script src="../static/js/axios.min.js" th:src="@{../js/axios.min.js}"></script>
+<script type="text/ecmascript" src="../static/js/md5.js" th:src="@{../js/md5.js}"></script>
+<script type="module">
+    var app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                username: '',
+                password: '',
+                supplierEntity: {},
+                registerModal: false,
+                registerModal_loading: true,
+                disabled: false,
+
+                smsCodeText: '发送验证码',
+                isSendSmsCode: false,
+                countDownTime: 60,
+
+                ruleSupplierEntity: {
+                    companyName: [
+                        { required: true, message: '必须填写公司名', trigger: 'blur' }
+                    ],
+                    phoneNumber: [
+                        { required: true, message: '必须填写手机号', trigger: 'blur' }
+                    ],
+                    smsCode: [
+                        { required: true, message: '必须填写验证码', trigger: 'blur' }
+                    ],
+                    account: [
+                        { required: true, message: '必须填写账号', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: '必须设置密码', trigger: 'blur' }
+                    ],
+                    passwordSecond: [
+                        { required: true, message: '必须确认密码', trigger: 'blur' }
+                    ],
+                }
+            }
+        },
+        created: function () {
+            this.countDown()
+        },
+        methods: {
+            login () {
+                if (this.username == '' || this.password == '') {
+                    thiz.$Message.info({
+                        content: '请填写帐号密码',
+                        duration: 10,
+                        closable: true
+                    });
+                }
+                var thiz = this;
+                axios.get('/user/login?account=' + this.username + '&password=' + hex_md5(this.password))
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            var roles = response.data.rolesEntityList,
+                                arr = [];
+                            roles.forEach(function (item) {
+                                arr.push(item.role)
+                            });
+                            if (arr.includes('ADMIN')) {
+                                window.location.href='/supplier'
+                            } else if (arr.includes('SUPPLIER')) {
+                                window.location.href='/supplier'
+                            } else if (arr.includes('BUYER') || arr.includes('AUDITOR')
+                                || arr.includes('BUYER_ADMIN') || arr.includes('BUYER_CHIEF')) {
+                                window.location.href='/bid'
+                            }
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+
+            onRegister() {
+                this.supplierEntity = {};
+                this.registerModal = true;
+            },
+
+            //提交
+            addSupplierEntity (name) {
+                this.$refs[name].validate((valid) => {
+                    if (valid) {
+                        if (this.supplierEntity.passwordSecond != this.supplierEntity.password) {
+                            this.$Message.error({
+                                content: '两个密码输入不一致',
+                                duration: 10,
+                                closable: true
+                            });
+                            this.registerModal = false;
+                            this.$nextTick(() => {
+                                this.registerModal = true
+                            });
+                            return;
+                        }
+                        var thiz = this;
+                        axios.post('/supplier/add', this.supplierEntity)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    // thiz.query();
+                                    // thiz.supplierEntity = {};
+                                    thiz.registerModal = false; // 关闭窗口
+                                } else {
+                                    thiz.registerModal_loading = false;
+                                    thiz.$nextTick(() => {
+                                        thiz.registerModal_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                thiz.registerModal_loading = false;
+                                thiz.$nextTick(() => {
+                                    thiz.registerModal_loading = true
+                                })
+                            });
+                    } else {
+                        this.registerModal_loading = false;
+                        this.$nextTick(() => {
+                            this.registerModal_loading = true
+                        })
+                    }
+                })
+            },
+
+            cancel (name) {
+                this.$refs[name].resetFields();
+            },
+
+            countDown() {
+                var thiz = this;
+                setInterval(function () {
+                    if (thiz.isSendSmsCode) {
+                        thiz.countDownTime = thiz.countDownTime-1;
+                        if (thiz.countDownTime == 0) {
+                            thiz.countDownTime = 60;
+                            thiz.smsCodeText = '发送验证码';
+                            thiz.isSendSmsCode = false;
+                        } else {
+                            thiz.smsCodeText = thiz.countDownTime + 's再获取';
+                        }
+                    }
+                }, 1000)
+            },
+
+            sendCode (){
+                var thiz = this;
+                var phoneNumber = this.supplierEntity.phoneNumber,
+                    isSendSmsCode = this.isSendSmsCode;
+                if (!isSendSmsCode) {
+                    if (phoneNumber == undefined) {
+                        this.$Message.error({
+                            content: '请输入联系电话',
+                            duration: 10,
+                            closable: true
+                        });
+                        return;
+                    }
+                    //调用发短信接口
+                    axios.get('/consume/send?phoneNumber=' + phoneNumber)
+                        .then(response => {
+                            response = response.data;
+                            if (response.code == 200) {
+                                thiz.isSendSmsCode=true;
+                                this.$Message.success({
+                                    content: '验证码发送成功！',
+                                    duration: 10,
+                                    closable: true
+                                });
+                            } else {
+                                this.$Message.error({
+                                    content: '验证码发送失败！',
+                                    duration: 10,
+                                    closable: true
+                                });
+                                console.log(response.msg)
+                            }
+                        })
+                        .catch(function (error) { // 请求失败处理
+                            thiz.$Message.error({
+                                content: error,
+                                duration: 10,
+                                closable: true
+                            });
+                        });
+                }
+            }
+        }
+    })
+</script>
 </html>

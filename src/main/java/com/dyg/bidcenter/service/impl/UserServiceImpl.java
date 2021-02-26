@@ -1,11 +1,11 @@
 package com.dyg.bidcenter.service.impl;
 
 import com.dyg.bidcenter.common.ResultCode;
+import com.dyg.bidcenter.common.ServiceException;
 import com.dyg.bidcenter.entity.SysUserEntity;
 import com.dyg.bidcenter.mapper.UserMapper;
 import com.dyg.bidcenter.model.SysUserModel;
 import com.dyg.bidcenter.service.UserService;
-import com.dyg.bidcenter.utils.RandomUtil;
 import com.dyg.bidcenter.utils.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,24 +23,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Object createUser() {
-        SysUserEntity sysUserEntity = new SysUserEntity();
-        String account;
-        while (true) {
-            account = RandomUtil.getRandomStringOfNumberByLength(8);
-            SysUserEntity user = userMapper.getUser(account);
-            if (user == null) {
-                break;
+    public SysUserEntity createUser(SysUserEntity sysUserEntity) {
+        SysUserEntity user = userMapper.getUser(sysUserEntity.getAccount());
+        if (user == null) {
+            sysUserEntity.setPassword(DigestUtils.md5DigestAsHex(sysUserEntity.getPassword().getBytes()));
+            Integer i = userMapper.insertUser(sysUserEntity);
+            if (i.equals(1)) {
+                return sysUserEntity;
+            } else {
+                throw new ServiceException("用户创建失败");
             }
+        } else {
+            throw new ServiceException("帐号已存在");
         }
-        sysUserEntity.setAccount(account);
-        sysUserEntity.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
-        userMapper.insertUser(sysUserEntity);
-        return ResponseUtil.result(ResultCode.SUCCESS, sysUserEntity);
     }
 
     @Override
     public Object updateUser(SysUserModel sysUserModel) {
+        sysUserModel.setPassword(DigestUtils.md5DigestAsHex(sysUserModel.getPassword().getBytes()));
         Integer res = userMapper.updateUser(sysUserModel);
         if (1 == res) {
             return ResponseUtil.result(ResultCode.SUCCESS);

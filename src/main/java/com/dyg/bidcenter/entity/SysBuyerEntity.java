@@ -1,13 +1,22 @@
 package com.dyg.bidcenter.entity;
 
+import com.dyg.bidcenter.annotation.Converter;
+import com.dyg.bidcenter.converter.DictConverter;
+import com.dyg.bidcenter.valid.BuyerControllerAddGroup;
+import com.dyg.bidcenter.valid.SupplierControllerAddGroup;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.sql.Timestamp;
 import java.util.Objects;
+
+import static com.dyg.bidcenter.cons.DictCons.COMPANY;
+import static com.dyg.bidcenter.cons.DictCons.ROLE;
 
 /**
  * @author merz
@@ -23,10 +32,55 @@ public class SysBuyerEntity {
     private int userId;
     private String username;
     private String phoneNumber;
+    @Converter(converter = DictConverter.class, type = COMPANY)
+    private String departmentStr;
     private String department;
+    @Converter(converter = DictConverter.class, type = ROLE)
+    private String positionStr;
     private String position;
     private Integer isValid;
     private Timestamp createdTime;
+    @NotBlank(message = "帐号不能为空", groups = BuyerControllerAddGroup.class)
+    private String account;
+    @NotBlank(message = "密码不能为空", groups = BuyerControllerAddGroup.class)
+    private String password;
+
+    @Transient
+    public String getDepartmentStr() {
+        return departmentStr;
+    }
+
+    public void setDepartmentStr(String departmentStr) {
+        this.departmentStr = departmentStr;
+    }
+
+    @Transient
+    public String getPositionStr() {
+        return positionStr;
+    }
+
+    public void setPositionStr(String positionStr) {
+        this.positionStr = positionStr;
+    }
+
+    @Transient
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     @Id
     @Column(name = "id")

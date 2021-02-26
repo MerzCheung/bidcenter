@@ -13,7 +13,7 @@ public class SysUserEntity {
     private Integer id;
     private String account;
     private String password;
-
+    private Integer isValid;
     private List<SysRolesEntity> rolesEntityList;
     private List<SysPermissionsEntity> permissionsEntities;
 }

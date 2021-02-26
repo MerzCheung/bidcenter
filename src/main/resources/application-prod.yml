@@ -1,11 +1,11 @@
 server:
-  port: 8000
+  port: 6069
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/bigcenter?allowMultiQueries=true&useUnicode=true&tinyInt1isBit=false&characterEncoding=UTF-8&autoReconnect=true&useSSL=true&serverTimezone=Hongkong
+    url: jdbc:mysql://172.18.2.56:3306/bidcenter?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
     username: root
-    password: asd
+    password: admin@12345
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
@@ -18,7 +18,7 @@ spring:
     # 操作数据库时显示sql语句
     show-sql: true
     # 自动生成表结构
-    generate-ddl: true
+    generate-ddl: false
     hibernate:
       ddl-auto: none
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -30,3 +30,11 @@ spring:
     servlet:
       content-type: text/html
     cache: false
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      file-size-threshold: 0
+      enabled: true
+      max-request-size: 200MB
+upload:
+  path: /upload

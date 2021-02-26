@@ -1,23 +1,42 @@
-<template>
+<template xmlns:th="http://www.w3.org/1999/xhtml">
     <i-Header>
         <i-Menu mode="horizontal" theme="dark" active-name="1">
             <div class="layout-logo">
-                <img src="../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload2.jpg}">
-                <span class="logo-title">东阳光询报价系统</span>
+                <img src="../static/imgs/fileUpload.jpg" th:src="@{../imgs/fileUpload2.jpg}" style="margin-left: -50px">
+                <span class="logo-title" style="margin-left: 50px">东阳光投标报价系统</span>
             </div>
             <div class="layout-nav">
                 <template>
                     <Dropdown>
                         <a href="javascript:void(0)">
-                            夏雨
+                            <Icon type="ios-contact" size="24"></Icon>
+                            <span th:text="${session.user_info.account}"></span>
                             <Icon type="ios-arrow-down"></Icon>
                         </a>
                         <i-DropdownMenu slot="list">
-                            <Dropdown-item>退出</Dropdown-item>
+                            <Dropdown-item @click.native="model_updatepwd = true">修改密码</Dropdown-item>
+                            <Dropdown-item @click.native="logout">退出</Dropdown-item>
                         </i-DropdownMenu>
                     </Dropdown>
                 </template>
             </div>
         </i-Menu>
     </i-Header>
+
+    <Modal
+            title="修改密码"
+            v-model="model_updatepwd"
+            @on-ok="updatePwd('pwdEntity')"
+            @on-cancel="cancelPwd('pwdEntity')"
+            ok-text="提交"
+            cancel-text="取消">
+        <i-Form ref="pwdEntity" :model="pwdEntity" :label-width="80">
+            <Form-Item label="密码设置" prop="password">
+                <i-Input type="password" v-model="pwdEntity.password"></i-Input>
+            </Form-Item>
+            <Form-Item label="密码确认" prop="passwordSecond">
+                <i-Input type="password" v-model="pwdEntity.passwordSecond"></i-Input>
+            </Form-Item>
+        </i-Form>
+    </Modal>
 </template>

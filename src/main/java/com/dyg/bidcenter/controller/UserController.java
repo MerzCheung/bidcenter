@@ -40,20 +40,9 @@ public class UserController {
      */
     @PostMapping("/updateUser")
     @ResponseBody
-    public Object updateUser(@CurrentUser SysUserEntity sysUserEntity, @Valid SysUserModel sysUserModel, BindingResult bindingResult) {
+    public Object updateUser(@CurrentUser SysUserEntity sysUserEntity, @Valid @RequestBody SysUserModel sysUserModel, BindingResult bindingResult) {
         sysUserModel.setId(sysUserEntity.getId());
         return userService.updateUser(sysUserModel);
-    }
-
-    /**
-     * 创建用户
-     *
-     * @return
-     */
-    @PostMapping("/createUser")
-    @ResponseBody
-    public Object createUser() {
-        return userService.createUser();
     }
 
     /**
@@ -74,7 +63,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/login")
+    @GetMapping("/login")
     @ResponseBody
     public ResponseUtil login(@RequestParam("account") String account,
                               @RequestParam("password") String password) {
@@ -91,6 +80,7 @@ public class UserController {
             e.printStackTrace();
             return ResponseUtil.result(ResultCode.ERROR.getCode(), "登录失败！");
         }
-        return ResponseUtil.result(ResultCode.SUCCESS);
+        SysUserEntity user = userService.getUser(account);
+        return ResponseUtil.result(ResultCode.SUCCESS, user);
     }
 }

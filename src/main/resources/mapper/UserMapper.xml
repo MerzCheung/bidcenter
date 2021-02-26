@@ -17,28 +17,16 @@
             <result column="pDescription" property="description"/>
         </collection>
     </resultMap>
-    <insert id="insertUser" parameterType="com.dyg.bidcenter.entity.SysUserEntity">
-        insert into sys_user(account,
-        password,created_time)
-        values (#{account}, #{password}, #{secretKey}, #{nickName}, #{portraitUri}, #{balance}, NOW())
+    <insert id="insertUser" parameterType="com.dyg.bidcenter.entity.SysUserEntity" keyProperty="id" useGeneratedKeys="true">
+        insert into sys_user(account, password,created_time)
+        values (#{account}, #{password}, NOW())
     </insert>
 
-    <update id="decBalance">
-        update sys_user
-        set balance = balance - #{num}
-        where id=#{userId} and is_valid=1 and balance >= #{num}
-    </update>
-
-    <update id="addBalance">
-        update sys_user
-        set balance = balance + #{num}
-        where id=#{userId} and is_valid=1
-    </update>
-
-    <update id="updateUser" parameterType="com.dyg.bidcenter.entity.SysUserEntity">
+    <update id="updateUser" parameterType="com.dyg.bidcenter.model.SysUserModel">
         update sys_user
         <set>
             <if test="password != null and password != ''">password=#{password},</if>
+            <if test="isValid != null">is_valid=#{isValid},</if>
         </set>
         where id=#{id} and is_valid=1
     </update>
@@ -69,6 +57,14 @@
         password
         from sys_user
         where id=#{userId} and is_valid=1
+    </select>
+    <select id="getBuyer" resultType="com.dyg.bidcenter.entity.SysBuyerEntity">
+        select
+        t1.account,
+        t2.*
+        from sys_user t1
+        inner join sys_buyer t2 on t2.is_valid=1 and t1.id=t2.user_id
+        where t1.is_valid=1
     </select>
 
 </mapper>

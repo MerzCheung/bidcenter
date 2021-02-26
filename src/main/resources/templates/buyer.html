@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
 <META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
@@ -10,9 +11,11 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>东阳光招投标网站</title>
+    <title>东阳光投标报价系统</title>
     <!-- import Vue.js -->
-    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>
+<!--    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>-->
+    <!--引入vue.min.js-->
+    <script src="../static/js/vue.min.js" th:src="@{../js/vue.min.js}"></script>
     <!-- import stylesheet -->
     <link href="http://unpkg.com/view-design/dist/styles/iview.css"
           th:src="@{http://unpkg.com/view-design/dist/styles/iview.css}" rel="stylesheet">
@@ -55,6 +58,13 @@
         font-size: 28px;
     }
 </style>
+<style>
+    .supplier-info {
+        font-size: 18px;
+        color: rgba(16, 16, 16, 100);
+        margin: 10px;
+    }
+</style>
 <body>
 <div id="app">
     <template>
@@ -63,31 +73,55 @@
                 <Layout th:include="hender"></Layout>
                 <Layout>
                     <Sider hide-trigger :style="{background: '#fff'}" th:include="sider"></Sider>
-                    <Layout :style="{padding: '0 24px 24px'}">
+                    <Layout :style="{padding: '0 24px 24px'}" shiro:hasAnyRoles="BUYER,AUDITOR,BUYER_ADMIN,BUYER_CHIEF">
+                        <Content :style="{padding: '24px', minHeight: '900px', background: '#fff'}">
+                            <row style="border: 1px solid rgba(187, 187, 187, 100);margin-bottom: 10px;padding: 50px;">
+                                <i-Col span="18">
+                                    <div class="supplier-info">职位：{{buyerEntity2.positionStr}}</div>
+                                    <div class="supplier-info">姓名：{{buyerEntity2.username}}</div>
+                                    <div class="supplier-info">联系电话：{{buyerEntity2.phoneNumber}}</div>
+                                    <div class="supplier-info">任职公司：{{buyerEntity2.departmentStr}}</div>
+                                    <div class="supplier-info">
+                                        <i-button @click="show()">编辑</i-button>
+                                    </div>
+                                </i-Col>
+                            </row>
+                        </Content>
+                    </Layout>
+                    <Layout :style="{padding: '0 24px 24px'}" shiro:hasRole="ADMIN">
                         <Content :style="{padding: '24px', minHeight: '900px', background: '#fff'}">
                             <Row>
                                 <i-col span="8">
-                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayward" @on-search="query"/>
+                                    <i-input search enter-button placeholder="输入搜索关键字" v-model="kayword" @on-search="queryInput"/>
                                 </i-col>
-                                <i-col span="2" offset="14">
+                                <i-col span="3" offset="13">
                                     <i-button type="success" @click="modal1 = true">新增</i-button>
-                                    <i-button type="error" @click="deleteTable">删除</i-button>
+<!--                                    <i-button type="error" @click="deleteTable">删除</i-button>-->
+                                    <Poptip
+                                            confirm
+                                            title="确定删除数据?"
+                                            @on-ok="deleteTable"
+                                            @on-cancel="deleteCancel">
+                                        <i-button type="error">删除</i-button>
+                                    </Poptip>
                                 </i-col>
                             </Row>
                             <Row style="padding: 10px 0">
-                                <i-Table border :loading="loading" ref="selection" :columns="columns1" :data="data1">
+                                <i-Table border ref="selection" :columns="columns1" :data="data1">
                                     <template slot-scope="{ row, index }" slot="action">
-                                        <i-button type="primary" size="small" @click="modal2 = true">编辑</i-button>
+                                        <i-button type="primary" size="small" @click="show(row)">编辑</i-button>
                                     </template>
                                 </i-Table>
                             </Row>
                             <Row>
                                 <i-col span="8">
-                                    <i-button @click="handleSelectAll(true)">Set all selected</i-button>
-                                    <i-button @click="handleSelectAll(false)">Cancel all selected</i-button>
+                                    <i-button @click="handleSelectAll(true)">设置全选</i-button>
+                                    <i-button @click="handleSelectAll(false)">取消全选</i-button>
                                 </i-col>
-                                <i-col span="12" offset="4" style="float: right;">
-                                    <Page :total="page_total" show-total show-sizer show-elevator @on-change="page_change" @on-page-size-change="page_size"/>
+                                <i-col span="12" offset="4">
+                                    <div style="float: right;">
+                                        <Page :total="page_total" show-total show-sizer  @on-change="page_change" @on-page-size-change="page_size"/>
+                                    </div>
                                 </i-col>
                             </Row>
                         </Content>
@@ -99,32 +133,40 @@
         <Modal
                 title="新增采购员"
                 v-model="modal1"
-                :loading="modal1_loading"
                 @on-ok="addBuyerEntity('addBuyerEntity')"
                 @on-cancel="cancel('addBuyerEntity')"
+                :loading="model1_loading"
                 ok-text="提交"
                 cancel-text="取消">
             <i-Form ref="addBuyerEntity" :model="buyerEntity" :rules="ruleBuyerEntity" :label-width="80">
+                <Form-Item label="职位" prop="position">
+                    <i-Select v-model="buyerEntity.position" placeholder="请选择职位">
+                        <i-Option v-for="(item, index) in positions" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
                 <Form-Item label="姓名" prop="username">
-                    <i-Input type="text" v-model="buyerEntity.username"></i-Input>
+                    <i-Input type="text" v-model="buyerEntity.username" placeholder="请输入姓名"></i-Input>
                 </Form-Item>
                 <Form-Item label="联系电话" prop="phoneNumber">
-                    <i-Input type="text" v-model="buyerEntity.phoneNumber"></i-Input>
+                    <i-Input type="text" v-model="buyerEntity.phoneNumber" placeholder="请输入联系电话"></i-Input>
                 </Form-Item>
-                <Form-Item label="任职部门" prop="department">
-                    <i-Input type="text" v-model="buyerEntity.department"></i-Input>
+<!--                <Form-Item label="任职公司" prop="department">-->
+<!--                    <i-Input type="text" v-model="buyerEntity.department" placeholder="请选择公司"></i-Input>-->
+<!--                </Form-Item>-->
+                <Form-Item label="任职公司" prop="department" placeholder="请选择公司">
+                    <i-Select v-model="buyerEntity.department">
+                        <i-Option v-for="(item, index) in companys" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
                 </Form-Item>
-                <Form-Item label="职位" prop="position">
-                    <i-Input type="text" v-model="buyerEntity.position"></i-Input>
-                </Form-Item>
+
                 <Form-Item label="新增帐号" prop="account">
-                    <i-Input type="text" v-model="buyerEntity.account"></i-Input>
+                    <i-Input type="text" v-model="buyerEntity.account" placeholder="请输入账号/工号"></i-Input>
                 </Form-Item>
                 <Form-Item label="密码设置" prop="password">
-                    <i-Input type="text" v-model="buyerEntity.password"></i-Input>
+                    <i-Input type="password" v-model="buyerEntity.password" placeholder="请设置密码"></i-Input>
                 </Form-Item>
                 <Form-Item label="密码确认" prop="passwordSecond">
-                    <i-Input type="text" v-model="buyerEntity.passwordSecond"></i-Input>
+                    <i-Input type="password" v-model="buyerEntity.passwordSecond" placeholder="请确认密码"></i-Input>
                 </Form-Item>
             </i-Form>
         </Modal>
@@ -132,24 +174,49 @@
         <Modal
                 title="编辑采购员"
                 v-model="modal2"
-                :loading="modal2_loading"
                 @on-ok="updateBuyerEntity('updateBuyerEntity')"
                 @on-cancel="cancel('updateBuyerEntity')"
+                :loading="model1_loading"
                 ok-text="提交"
                 cancel-text="取消">
             <i-Form ref="updateBuyerEntity" :model="buyerEntity" :label-width="80">
+                <Form-Item label="职位" prop="position" placeholder="请选择职位" shiro:hasRole="ADMIN">
+                    <i-Select v-model="buyerEntity.position">
+                        <i-Option v-for="(item, index) in positions" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
+                <Form-Item label="职位" prop="position" placeholder="请选择职位" shiro:lacksRole="ADMIN">
+                    <i-Select :disabled="true" v-model="buyerEntity.position">
+                        <i-Option v-for="(item, index) in positions" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
+                </Form-Item>
                 <Form-Item label="姓名" prop="username">
                     <i-Input type="text" v-model="buyerEntity.username"></i-Input>
                 </Form-Item>
                 <Form-Item label="联系电话" prop="phoneNumber">
                     <i-Input type="text" v-model="buyerEntity.phoneNumber"></i-Input>
                 </Form-Item>
-                <Form-Item label="任职部门" prop="department">
-                    <i-Input type="text" v-model="buyerEntity.department"></i-Input>
+                <Form-Item label="任职公司" prop="department" placeholder="请选择公司" shiro:hasRole="ADMIN">
+                    <i-Select v-model="buyerEntity.department">
+                        <i-Option v-for="(item, index) in companys" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
                 </Form-Item>
-                <Form-Item label="职位" prop="position">
-                    <i-Input type="text" v-model="buyerEntity.position"></i-Input>
+                <Form-Item label="任职公司" prop="department" placeholder="请选择公司" shiro:lacksRole="ADMIN">
+                    <i-Select :disabled="true" v-model="buyerEntity.department">
+                        <i-Option v-for="(item, index) in companys" :key="item.id" :value="item.code">{{ item.name }}</i-Option>
+                    </i-Select>
                 </Form-Item>
+                <div shiro:hasRole="ADMIN">
+                    <Form-Item label="用户帐号" prop="account">
+                        <i-Input type="text" disabled="disabled" v-model="buyerEntity.account"></i-Input>
+                    </Form-Item>
+                    <Form-Item label="密码设置" prop="password">
+                        <i-Input type="password" v-model="buyerEntity.password"></i-Input>
+                    </Form-Item>
+                    <Form-Item label="密码确认" prop="passwordSecond">
+                        <i-Input type="password" v-model="buyerEntity.passwordSecond"></i-Input>
+                    </Form-Item>
+                </div>
             </i-Form>
         </Modal>
     </template>
@@ -163,52 +230,31 @@
         data() {
             return {
                 activeName: '1-4',
-                kayward: '',
+                kayword: '',
                 page: 1,
                 page_size: 10,
                 page_total: 100,
-                loading: false,
 
-
-                cityList: [
-                    {
-                        value: 'New York',
-                        label: 'New York'
-                    },
-                    {
-                        value: 'London',
-                        label: 'London'
-                    },
-                    {
-                        value: 'Sydney',
-                        label: 'Sydney'
-                    },
-                    {
-                        value: 'Ottawa',
-                        label: 'Ottawa'
-                    },
-                    {
-                        value: 'Paris',
-                        label: 'Paris'
-                    },
-                    {
-                        value: 'Canberra',
-                        label: 'Canberra'
-                    }
-                ],
-                bidEntity: {
-
-                },
                 modal1: false,
-                modal1_loading: true,
-
+                model1_loading: true,
                 modal2: false,
-                modal2_loading: true,
+
+                model_updatepwd: false,
+                pwdEntity: {},
+                companys: [],
+                positions: [],
 
                 ruleBuyerEntity: {
-                    companyName: [
-                        { required: true, message: '必须设置公司名', trigger: 'blur' }
+                    position: [
+                        { required: true, message: '必须输入职位', trigger: 'change' }
                     ],
+                    username: [
+                        { required: true, message: '必须输入姓名', trigger: 'blur' }
+                    ],
+                    department: [
+                        { required: true, message: '必须输入公司', trigger: 'change' }
+                    ],
+
                     account: [
                         { required: true, message: '必须设置帐号', trigger: 'blur' }
                     ],
@@ -216,10 +262,11 @@
                         { required: true, message: '必须设置密码', trigger: 'blur' }
                     ],
                     passwordSecond: [
-                        { required: true, message: '必须确认', trigger: 'blur' }
+                        { required: true, message: '必须确认密码', trigger: 'blur' }
                     ],
                 },
                 buyerEntity: {},
+                buyerEntity2: {},
                 columns1: [
                     {
                         type: 'selection',
@@ -227,101 +274,321 @@
                         align: 'center'
                     },
                     {
-                        title: 'Name',
-                        key: 'name'
+                        title: '姓名',
+                        key: 'username'
                     },
                     {
-                        title: 'Age',
-                        key: 'age'
+                        title: '职位',
+                        key: 'positionStr'
                     },
                     {
-                        title: 'Address',
-                        key: 'address'
+                        title: '联系电话',
+                        key: 'phoneNumber'
                     },
                     {
-                        title: 'Action',
+                        title: '所在公司',
+                        key: 'departmentStr'
+                    },
+                    {
+                        title: '操作',
                         slot: 'action',
                         width: 150,
                         align: 'center'
                     }
                 ],
-                data1: [
-                    {
-                        name: 'John Brown',
-                        age: 18,
-                        address: 'New York No. 1 Lake Park',
-                        date: '2016-10-03'
-                    },
-                    {
-                        name: 'Jim Green',
-                        age: 24,
-                        address: 'London No. 1 Lake Park',
-                        date: '2016-10-01'
-                    },
-                    {
-                        name: 'Joe Black',
-                        age: 30,
-                        address: 'Sydney No. 1 Lake Park',
-                        date: '2016-10-02'
-                    },
-                    {
-                        name: 'Jon Snow',
-                        age: 26,
-                        address: 'Ottawa No. 2 Lake Park',
-                        date: '2016-10-04'
-                    }
-                ]
+                data1: []
             }
         },
+        created: function () {
+            this.query();
+            this.getDict('company');
+            this.getDict('role');
+        },
         methods: {
+            getDict(type) {
+                var obj = {
+                    type: type,
+                    isValid: "1"
+                };
+                var thiz = this;
+                axios.post('/dict/getList', obj)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (type == 'company') {
+                                thiz.companys = response.data
+                            } else if (type == 'role') {
+                                thiz.positions = response.data
+                            }
+                        } else {
+                            console.log(response.msg)
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error)
+                    });
+            },
             deleteTable() {
                 var selected = this.$refs.selection.getSelection();
+                if(selected.length===0){
+                    this.$Message.error({
+                        content: '请先勾选要删除的数据!',
+                        duration: 3,
+                        closable: true
+                    });
+                }
                 selected = selected.map(item => {
-                    return item.name
+                    return item.id
                 });
-                console.log(selected)
+                if (selected.length == 0) {
+                    return
+                }
+                var thiz = this;
+                axios.get('/buyer/delete?ids=' + selected.join(","))
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.query();
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            deleteCancel () {
+                this.$refs.selection.selectAll(false);
             },
             handleSelectAll (status) {
                 this.$refs.selection.selectAll(status);
             },
+
             addBuyerEntity (name) {
                 this.$refs[name].validate((valid) => {
                     if (valid) {
-                        console.log(this.buyerEntity);
-                        this.modal1 = false; // 关闭窗口
-                        this.$refs[name].resetFields(); // 重置表单
+                        if (this.buyerEntity.passwordSecond != this.buyerEntity.password) {
+                            this.$Message.error({
+                                content: '两个密码输入不一致',
+                                duration: 10,
+                                closable: true
+                            });
+                            this.model1_loading = false;
+                            this.$nextTick(() => {
+                                this.model1_loading = true
+                            });
+                            return;
+                        }
+                        var thiz = this;
+                        axios.post('/buyer/add', this.buyerEntity)
+                            .then(response => {
+                                response = response.data;
+                                if (response.code == 200) {
+                                    thiz.query();
+                                    thiz.buyerEntity = {};
+                                    thiz.modal1 = false; // 关闭窗口
+                                } else {
+                                    thiz.model1_loading = false;
+                                    thiz.$nextTick(() => {
+                                        thiz.model1_loading = true
+                                    })
+                                }
+                                thiz.$Message.info({
+                                    content: response.msg,
+                                    duration: 10,
+                                    closable: true
+                                });
+                            })
+                            .catch(function (error) { // 请求失败处理
+                                thiz.$Message.error({
+                                    content: error,
+                                    duration: 10,
+                                    closable: true
+                                });
+                                thiz.model1_loading = false;
+                                thiz.$nextTick(() => {
+                                    thiz.model1_loading = true
+                                })
+                            });
                     } else {
-                        this.modal1_loading = false;
+                        this.model1_loading = false;
                         this.$nextTick(() => {
-                            this.modal1_loading = true;
-                        });
+                            this.model1_loading = true
+                        })
                     }
                 })
             },
-            updateBuyerEntity (name) {
-                console.log(this.buyerEntity);
-                this.modal2 = false; // 关闭窗口
-                this.$refs[name].resetFields(); // 重置表单
+
+            show(row) {
+                if (row == undefined) {
+                    row = this.buyerEntity2
+                }
+                this.modal2 = true;
+                this.buyerEntity=Object.assign({}, row);
             },
+
+            updateBuyerEntity (name) {
+                var thiz = this;
+                if (this.buyerEntity.passwordSecond != this.buyerEntity.password) {
+                    this.$Message.error({
+                        content: '两个密码输入不一致',
+                        duration: 10,
+                        closable: true
+                    });
+                    this.model1_loading = false;
+                    this.$nextTick(() => {
+                        this.model1_loading = true
+                    });
+                    return;
+                }
+
+                axios.post('/buyer/update', this.buyerEntity)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            thiz.query();
+                            thiz.buyerEntity = {};
+                            thiz.modal2 = false; // 关闭窗口
+                        } else {
+                            thiz.model1_loading = false;
+                            thiz.$nextTick(() => {
+                                thiz.model1_loading = true
+                            });
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                        thiz.model1_loading = false;
+                        thiz.$nextTick(() => {
+                            thiz.model1_loading = true
+                        });
+                    });
+            },
+
             cancel (name) {
                 this.$refs[name].resetFields();
             },
+
             page_change (page) {
-                console.log(page)
+                this.page=page;
+                this.query()
             },
-            page_size (size) {
-                console.log(size)
+            pageSize (size) {
+                this.page_size=size;
+                this.page=1;
+                this.query()
+            },
+            queryInput() {
+                this.page=1;
+                this.query()
             },
             query() {
-                console.log(this.kayward)
-                // axios.get('/json')
-                //     .then(response => (console.log("111   " + response)))
-                //     .catch(function (error) { // 请求失败处理
-                //         console.log(error);
-                //     });
+                var thiz = this,
+                    url = '/buyer/pageQuery/'+(this.page-1)+'/'+this.page_size;
+                if (this.kayword != '') {
+                    url += '?kayword=' + this.kayword;
+                }
+                axios.get(url)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (response.data.content == undefined) {
+                                thiz.buyerEntity2 = response.data;
+                            } else {
+                                thiz.data1 = response.data.content;
+                                thiz.page = response.data.number+1;
+                                thiz.page_size = response.data.size;
+                                thiz.page_total = response.data.totalElements;
+                            }
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
             },
             menu_select(name) {
                 menuSelect.menu_select(name)
+            },
+            logout() {
+                axios.get('/user/logout')
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            window.location.href='/'
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            updatePwd() {
+                var thiz = this;
+                if (this.pwdEntity.password != this.pwdEntity.passwordSecond) {
+                    this.$Message.error({
+                        content: '两个密码输入不一致',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                axios.post('/user/updateUser', this.pwdEntity)
+                    .then(response => {
+                        response = response.data;
+                        // if (response.code == 200) {
+                        //     thiz.logout()
+                        // }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            cancelPwd(name) {
+                this.$refs[name].resetFields();
             }
         }
     });

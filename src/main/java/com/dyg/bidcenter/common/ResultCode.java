@@ -12,6 +12,8 @@ public enum ResultCode {
 
     NOEXISTUSER(505, "获取用户信息失败!"),
 
+    CODEERROR(506, "验证码错误!"),
+
     ERROR(500, "失败！"),
 
     SUCCESS(200, "成功！");

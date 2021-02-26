@@ -6,10 +6,14 @@
   <session-factory>
     <property name="connection.url">jdbc:mysql://localhost:3306/bidcenter</property>
     <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
-    <mapping class="com.dyg.bidcenter.entity.SysBidEntity"/>
+      <mapping class="com.dyg.bidcenter.entity.SysBidEntity"/>
       <mapping class="com.dyg.bidcenter.entity.SysBidDocumentEntity"/>
       <mapping class="com.dyg.bidcenter.entity.SysBuyerEntity"/>
       <mapping class="com.dyg.bidcenter.entity.SysSupplierEntity"/>
+      <mapping class="com.dyg.bidcenter.entity.SysUsersRolesEntity"/>
+      <mapping class="com.dyg.bidcenter.entity.SysRolesEntity"/>
+      <mapping class="com.dyg.bidcenter.entity.SysDictEntity"/>
+      <mapping class="com.dyg.bidcenter.entity.SysLabelEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

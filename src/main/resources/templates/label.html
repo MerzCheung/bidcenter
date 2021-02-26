@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE"/>
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"/>
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-store, must-revalidate"/>
+<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT"/>
+<META HTTP-EQUIV="expires" CONTENT="0"/>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>东阳光投标报价系统</title>
+    <!-- import Vue.js -->
+<!--    <script src="http://vuejs.org/js/vue.min.js" th:src="@{http://vuejs.org/js/vue.min.js}"></script>-->
+    <!--引入vue.min.js-->
+    <script src="../static/js/vue.min.js" th:src="@{../js/vue.min.js}"></script>
+    <!-- import stylesheet -->
+    <link href="http://unpkg.com/view-design/dist/styles/iview.css"
+          th:src="@{http://unpkg.com/view-design/dist/styles/iview.css}" rel="stylesheet">
+    <!-- import iView -->
+    <script src="http://unpkg.com/view-design/dist/iview.min.js"
+            th:src="@{http://unpkg.com/view-design/dist/iview.min.js}"></script>
+</head>
+<style scoped>
+    .layout {
+        border: 1px solid #d7dde4;
+        background: #f5f7f9;
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .layout-logo {
+        width: 30%;
+        height: 30px;
+        border-radius: 3px;
+        float: left;
+        position: relative;
+        top: 15px;
+        left: 20px;
+    }
+    .layout-logo img {
+        height: 40px
+    }
+
+    .layout-nav {
+        float: right;
+    }
+    .logo-title{
+        height: 100%;
+        position: absolute;
+        bottom: 10px;
+        padding-left: 10px;
+        color: white;
+        font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+        font-size: 28px;
+    }
+</style>
+<style>
+    .label_text {
+        color: rgba(16, 16, 16, 100);
+        font-size: 18px;
+    }
+    .second_level {
+        width: 80%;
+        border: 1px solid rgba(187, 187, 187, 100);
+        min-height: 240px;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    .second_level_item {
+        display: inline-block;
+        border: 1px solid rgba(187, 187, 187, 100);
+        font-size: 14px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        margin: 0 0 5px 5px;
+        padding: 0 3px;
+        border-radius: 4px;
+    }
+    .second_level_item a {
+        margin-left: 5px;
+        color: red;
+    }
+</style>
+<body>
+<div id="app">
+    <template>
+        <div class="layout">
+            <Layout>
+                <Layout th:include="hender"></Layout>
+                <Layout>
+                    <Sider hide-trigger :style="{background: '#fff'}" th:include="sider"></Sider>
+                    <Layout :style="{padding: '0 24px 24px'}">
+                        <Content :style="{padding: '24px', minHeight: '900px', background: '#fff'}">
+                            <Row>
+                                <i-Col span="20" push="2">
+                                    <i-Select style="width:200px" @on-change="selectChange">
+                                        <i-Option v-for="item in firstLabelList" :value="item.id" :key="item.id">{{ item.name }}</i-Option>
+                                    </i-Select>
+                                </i-Col>
+                                <i-Col span="2" pull="20" class="label_text">一级标签</i-Col>
+                                <i-Col span="2" pull="16" class="label_text">
+                                    <i-Button type="success" @click="addFirstLabel">新增</i-Button>
+                                </i-Col>
+                            </Row>
+                            <br>
+                            <Row>
+                                <i-Col span="20" push="2">
+                                    <div class="second_level">
+                                        <div class="second_level_item" v-for="item in secondLabelList">
+                                            <span>{{item.name}}</span>
+                                            <a @click="deleteSecondLabel(item.id)">×</a>
+                                        </div>
+                                    </div>
+                                </i-Col>
+                                <i-Col span="2" pull="20" class="label_text">二级标签</i-Col>
+                                <i-Col span="2" pull="3" class="label_text">
+                                    <i-Button type="success" @click="addSecondLabel">新增</i-Button>
+                                </i-Col>
+                            </Row>
+                        </Content>
+                    </Layout>
+                </Layout>
+            </Layout>
+        </div>
+
+        <Modal
+                :title="model_title"
+                v-model="modal1"
+                @on-ok="addLabelEntity('addLabelEntity')"
+                @on-cancel="cancel('addLabelEntity')"
+                :loading="model1_loading"
+                ok-text="提交"
+                cancel-text="取消">
+            <i-Form ref="addLabelEntity" :model="labelEntity" :rules="ruleLabelEntity" :label-width="80">
+                <Form-Item label="名称" prop="name">
+                    <i-Input type="text" v-model="labelEntity.name"></i-Input>
+                </Form-Item>
+            </i-Form>
+        </Modal>
+    </template>
+</div>
+</body>
+<script src="../static/js/axios.min.js" th:src="@{../js/axios.min.js}"></script>
+<script type="module">
+    import menuSelect from '../js/menu_select.js';
+    var app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeName: '1-5',
+                model_updatepwd: false,
+                pwdEntity: {},
+
+                model_title: '新增一级标签',
+                modal1: false,
+                model1_loading: true,
+                firstLabelId: 0,
+                firstLabelList: [],
+                secondLabelList: [],
+                labelEntity: {},
+                ruleLabelEntity: {
+                    name: [
+                        { required: true, message: '必须设置名称', trigger: 'blur' }
+                    ]
+                },
+            }
+        },
+        created: function () {
+            this.query(0);
+        },
+        methods: {
+            addFirstLabel() {
+                this.labelEntity = {};
+                this.model_title = '新增一级标签';
+                this.modal1 = true;
+            },
+            addSecondLabel() {
+                this.labelEntity = {};
+                this.model_title = '新增二级标签';
+                this.modal1 = true;
+            },
+            addLabelEntity() {
+                var thiz = this,
+                    model_title = this.model_title;
+                if (model_title == '新增一级标签') {
+                    this.labelEntity.parentId=0;
+                } else if (model_title == '新增二级标签') {
+                    if (this.firstLabelId == 0) {
+                        thiz.$Message.error({
+                            content: '请选择一级标签',
+                            duration: 10,
+                            closable: true
+                        });
+                        return;
+                    }
+                    this.labelEntity.parentId=this.firstLabelId;
+                }
+                axios.post('/label/add', this.labelEntity)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (model_title == '新增一级标签') {
+                                thiz.query(0);
+                            } else if (model_title == '新增二级标签') {
+                                thiz.query(this.firstLabelId);
+                            }
+                            thiz.labelEntity = {};
+                            thiz.modal1 = false; // 关闭窗口
+                        } else {
+                            thiz.model1_loading = false;
+                            thiz.$nextTick(() => {
+                                thiz.model1_loading = true
+                            })
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                        thiz.model1_loading = false;
+                        thiz.$nextTick(() => {
+                            thiz.model1_loading = true
+                        })
+                    });
+            },
+            deleteSecondLabel(id) {
+                var thiz = this;
+                axios.get('/label/delete/'+id)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            this.query(this.firstLabelId);
+                        }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            selectChange(value) {
+                this.firstLabelId = value;
+                this.query(value);
+            },
+            cancel (name) {
+                this.$refs[name].resetFields();
+            },
+            query(id) {
+                var thiz = this,
+                    url = '/label/queryAll';
+                if (id != undefined) {
+                    url += '?id=' + id;
+                }
+                axios.get(url)
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            if (id != 0) {
+                                thiz.secondLabelList = response.data;
+                            } else {
+                                thiz.firstLabelList = response.data;
+                            }
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            menu_select(name) {
+                menuSelect.menu_select(name)
+            },
+            logout() {
+                axios.get('/user/logout')
+                    .then(response => {
+                        response = response.data;
+                        if (response.code == 200) {
+                            window.location.href='/'
+                        } else {
+                            thiz.$Message.info({
+                                content: response.msg,
+                                duration: 10,
+                                closable: true
+                            });
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            updatePwd() {
+                var thiz = this;
+                if (this.pwdEntity.password != this.pwdEntity.passwordSecond) {
+                    this.$Message.error({
+                        content: '两个密码输入不一致',
+                        duration: 10,
+                        closable: true
+                    });
+                    return;
+                }
+                axios.post('/user/updateUser', this.pwdEntity)
+                    .then(response => {
+                        response = response.data;
+                        // if (response.code == 200) {
+                        //     thiz.logout()
+                        // }
+                        thiz.$Message.info({
+                            content: response.msg,
+                            duration: 10,
+                            closable: true
+                        });
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        thiz.$Message.error({
+                            content: error,
+                            duration: 10,
+                            closable: true
+                        });
+                    });
+            },
+            cancelPwd(name) {
+                this.$refs[name].resetFields();
+            }
+        }
+    });
+</script>
+</html>

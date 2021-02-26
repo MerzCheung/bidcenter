@@ -9,7 +9,9 @@ export default {
             url='supplier';
         } else if ('1-4' == name) {
             url='buyer';
+        } else if ('1-5' == name) {
+            url='label';
         }
-        window.location.href='http://localhost:8000/'+url
+        window.location.href='/'+url
     }
 }

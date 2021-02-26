@@ -18,7 +18,7 @@ public interface UserService {
      *
      * @return
      */
-    Object createUser();
+    SysUserEntity createUser(SysUserEntity sysUserEntity);
 
     /**
      * 修改用户
